@@ -63,7 +63,7 @@ ne:{title:'',category:'Custom',tags:'',language:'powershell',description:'',code
 bat:{ps1:'',loc:'same',sub:'',custom:'',admin:true,bypass:true,pause:false,hidden:false,log:false,logFile:'log.txt'},
 iw:{source:'',setup:'install.ps1',output:'',quiet:true},
 det:{type:'registry',regPath:'',regValue:'',expected:'',filePath:'',version:'',serviceName:''},
-sc:{name:'',exe:'',silent:'',unsilent:'',detType:'file',detPath:'',detReg:'',detVal:'',detExp:'',version:'',shortcuts:false,scNames:'',preRemove:false,preName:'',postSteps:'',basePath:'E:\\\\Deployments'}};
+sc:{name:'',exe:'',silent:'',unsilent:'',detType:'file',detPath:'',detReg:'',detVal:'',detExp:'',version:'',shortcuts:false,scNames:'',preRemove:false,preName:'',postSteps:'',basePath:'E:\Deployments'}};
 
 const $=id=>document.getElementById(id);
 const esc=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML;};
@@ -363,61 +363,61 @@ S.det.type==='file'?`
 <div style="border:1px solid #1a1a2e;border-radius:5px;padding:10px;background:#0a0a12">
 <label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:6px">DETECTION METHOD</label>
 <div style="display:flex;gap:6px;margin-bottom:8px">
-${['file','registry'].map(t=>\`<button class="b" onclick="S.sc.detType='\${t}';render()" style="flex:1;text-align:center;font-size:10px;\${S.sc.detType===t?'border-color:#ef476f55;background:#ef476f0d;color:#ef476f':''}">\${t.charAt(0).toUpperCase()+t.slice(1)}</button>\`).join('')}</div>
-\${S.sc.detType==='file'?\`<input value="\${esc(S.sc.detPath)}" oninput="S.sc.detPath=this.value;render()" placeholder="C:\\\\Program Files\\\\Python312\\\\python.exe">\`:
-\`<input value="\${esc(S.sc.detReg)}" oninput="S.sc.detReg=this.value;render()" placeholder="HKLM:\\\\SOFTWARE\\\\..." style="margin-bottom:4px">
-<input value="\${esc(S.sc.detVal)}" oninput="S.sc.detVal=this.value;render()" placeholder="Registry value name" style="margin-bottom:4px">
-<input value="\${esc(S.sc.detExp)}" oninput="S.sc.detExp=this.value;render()" placeholder="Expected value">\`}
+${['file','registry'].map(t=>`<button class="b" onclick="S.sc.detType='${t}';render()" style="flex:1;text-align:center;font-size:10px;${S.sc.detType===t?'border-color:#ef476f55;background:#ef476f0d;color:#ef476f':''}">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}</div>
+${S.sc.detType==='file'?`<input value="${esc(S.sc.detPath)}" oninput="S.sc.detPath=this.value;render()" placeholder="C:\\\\Program Files\\\\Python312\\\\python.exe">`:
+`<input value="${esc(S.sc.detReg)}" oninput="S.sc.detReg=this.value;render()" placeholder="HKLM:\\\\SOFTWARE\\\\..." style="margin-bottom:4px">
+<input value="${esc(S.sc.detVal)}" oninput="S.sc.detVal=this.value;render()" placeholder="Registry value name" style="margin-bottom:4px">
+<input value="${esc(S.sc.detExp)}" oninput="S.sc.detExp=this.value;render()" placeholder="Expected value">`}
 </div>
 
 <div style="border:1px solid #1a1a2e;border-radius:5px;padding:10px;background:#0a0a12">
 <label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:6px">POST-INSTALL OPTIONS</label>
-<div class="tgl" onclick="S.sc.shortcuts=!S.sc.shortcuts;render()"><div class="tgl-t\${S.sc.shortcuts?' on':''}"><div class="tgl-k"></div></div><span>Copy shortcuts to Public Desktop</span></div>
-\${S.sc.shortcuts?\`<input value="\${esc(S.sc.scNames)}" oninput="S.sc.scNames=this.value;render()" placeholder="Python.lnk, IDLE.lnk (comma separated)" style="margin-left:44px;width:calc(100% - 44px);font-size:10px;padding:5px 8px">\`:''}
-<div class="tgl" onclick="S.sc.preRemove=!S.sc.preRemove;render()"><div class="tgl-t\${S.sc.preRemove?' on':''}"><div class="tgl-k"></div></div><span>Pre-remove old version first</span></div>
-\${S.sc.preRemove?\`<input value="\${esc(S.sc.preName)}" oninput="S.sc.preName=this.value;render()" placeholder="Old app display name in registry" style="margin-left:44px;width:calc(100% - 44px);font-size:10px;padding:5px 8px">\`:''}
+<div class="tgl" onclick="S.sc.shortcuts=!S.sc.shortcuts;render()"><div class="tgl-t${S.sc.shortcuts?' on':''}"><div class="tgl-k"></div></div><span>Copy shortcuts to Public Desktop</span></div>
+${S.sc.shortcuts?`<input value="${esc(S.sc.scNames)}" oninput="S.sc.scNames=this.value;render()" placeholder="Python.lnk, IDLE.lnk (comma separated)" style="margin-left:44px;width:calc(100% - 44px);font-size:10px;padding:5px 8px">`:''}
+<div class="tgl" onclick="S.sc.preRemove=!S.sc.preRemove;render()"><div class="tgl-t${S.sc.preRemove?' on':''}"><div class="tgl-k"></div></div><span>Pre-remove old version first</span></div>
+${S.sc.preRemove?`<input value="${esc(S.sc.preName)}" oninput="S.sc.preName=this.value;render()" placeholder="Old app display name in registry" style="margin-left:44px;width:calc(100% - 44px);font-size:10px;padding:5px 8px">`:''}
 </div>
 
 <div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">BASE PATH</label>
 <div style="display:flex;gap:4px;margin-bottom:4px">
-\${['E:\\\\Deployments','C:\\\\IntuneApps','E:\\\\Apps'].map(p=>\`<button class="b" onclick="S.sc.basePath='\${p}';render()" style="font-size:8px;\${S.sc.basePath===p?'border-color:#ef476f44;color:#ef476f':''}">$\{p.split('\\\\\\\\').pop()}</button>\`).join('')}
+${['E:\\Deployments','C:\\IntuneApps','E:\\Apps'].map(p=>`<button class="b" onclick="S.sc.basePath='${p}';render()" style="font-size:8px;${S.sc.basePath===p?'border-color:#ef476f44;color:#ef476f':''}">${p.split('\\').pop()}</button>`).join('')}
 </div>
-<input value="\${esc(S.sc.basePath)}" oninput="S.sc.basePath=this.value;render()" placeholder="E:\\\\Deployments"></div>
+<input value="${esc(S.sc.basePath)}" oninput="S.sc.basePath=this.value;render()" placeholder="E:\Deployments"></div>
 
 <div style="margin-top:4px;font-size:9px;color:#444;border:1px solid #1a1a2e;border-radius:4px;padding:8px;background:#08080e">
 <div style="color:#ef476f;font-weight:600;margin-bottom:4px">FOLDER STRUCTURE:</div>
-<div style="color:#666;line-height:1.6">\${esc(scFolder())}</div></div>
+<div style="color:#666;line-height:1.6">${esc(scFolder())}</div></div>
 
 <div style="display:flex;gap:4px;margin-top:4px">
-<button class="b" onclick="copy(genScInstall(),'sc-i')" style="flex:1;text-align:center;background:\${S.cop==='sc-i'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">\${S.cop==='sc-i'?'\u2713':'install.ps1'}</button>
-<button class="b" onclick="copy(genScUninstall(),'sc-u')" style="flex:1;text-align:center;background:\${S.cop==='sc-u'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">\${S.cop==='sc-u'?'\u2713':'uninstall.ps1'}</button>
-<button class="b" onclick="copy(genScDetect(),'sc-d')" style="flex:1;text-align:center;background:\${S.cop==='sc-d'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">\${S.cop==='sc-d'?'\u2713':'detect.ps1'}</button>
-<button class="b" onclick="copy(genScBat(),'sc-b')" style="flex:1;text-align:center;background:\${S.cop==='sc-b'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">\${S.cop==='sc-b'?'\u2713':'Run.bat'}</button>
+<button class="b" onclick="copy(genScInstall(),'sc-i')" style="flex:1;text-align:center;background:${S.cop==='sc-i'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">${S.cop==='sc-i'?'\u2713':'install.ps1'}</button>
+<button class="b" onclick="copy(genScUninstall(),'sc-u')" style="flex:1;text-align:center;background:${S.cop==='sc-u'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">${S.cop==='sc-u'?'\u2713':'uninstall.ps1'}</button>
+<button class="b" onclick="copy(genScDetect(),'sc-d')" style="flex:1;text-align:center;background:${S.cop==='sc-d'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">${S.cop==='sc-d'?'\u2713':'detect.ps1'}</button>
+<button class="b" onclick="copy(genScBat(),'sc-b')" style="flex:1;text-align:center;background:${S.cop==='sc-b'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">${S.cop==='sc-b'?'\u2713':'Run.bat'}</button>
 </div>
 
 <div style="margin-top:8px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
 <label style="font-size:9px;color:#555;letter-spacing:1px">INSTALL.PS1</label>
-<button class="b" onclick="copy(genScInstall(),'sc-ip')" style="font-size:8px;border-color:#333;color:#777">\${S.cop==='sc-ip'?'\u2713':'COPY'}</button></div>
-<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">\${esc(genScInstall())}</pre></div>
+<button class="b" onclick="copy(genScInstall(),'sc-ip')" style="font-size:8px;border-color:#333;color:#777">${S.cop==='sc-ip'?'\u2713':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">${esc(genScInstall())}</pre></div>
 
 <div style="margin-top:8px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
 <label style="font-size:9px;color:#555;letter-spacing:1px">UNINSTALL.PS1</label>
-<button class="b" onclick="copy(genScUninstall(),'sc-up')" style="font-size:8px;border-color:#333;color:#777">\${S.cop==='sc-up'?'\u2713':'COPY'}</button></div>
-<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">\${esc(genScUninstall())}</pre></div>
+<button class="b" onclick="copy(genScUninstall(),'sc-up')" style="font-size:8px;border-color:#333;color:#777">${S.cop==='sc-up'?'\u2713':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">${esc(genScUninstall())}</pre></div>
 
 <div style="margin-top:8px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
 <label style="font-size:9px;color:#555;letter-spacing:1px">DETECT.PS1</label>
-<button class="b" onclick="copy(genScDetect(),'sc-dp')" style="font-size:8px;border-color:#333;color:#777">\${S.cop==='sc-dp'?'\u2713':'COPY'}</button></div>
-<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">\${esc(genScDetect())}</pre></div>
+<button class="b" onclick="copy(genScDetect(),'sc-dp')" style="font-size:8px;border-color:#333;color:#777">${S.cop==='sc-dp'?'\u2713':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">${esc(genScDetect())}</pre></div>
 
 <div style="margin-top:8px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
 <label style="font-size:9px;color:#555;letter-spacing:1px">RUN-INSTALL.BAT</label>
-<button class="b" onclick="copy(genScBat(),'sc-bp')" style="font-size:8px;border-color:#333;color:#777">\${S.cop==='sc-bp'?'\u2713':'COPY'}</button></div>
-<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">\${esc(genScBat())}</pre></div>
+<button class="b" onclick="copy(genScBat(),'sc-bp')" style="font-size:8px;border-color:#333;color:#777">${S.cop==='sc-bp'?'\u2713':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">${esc(genScBat())}</pre></div>
 
 </div></div>
 
