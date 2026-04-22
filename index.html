@@ -62,7 +62,8 @@ sync:'idle',lastSync:'',pending:false,tab:'wiki',
 ne:{title:'',category:'Custom',tags:'',language:'powershell',description:'',code:'',scriptFile:'',packageUrl:''},
 bat:{ps1:'',loc:'same',sub:'',custom:'',admin:true,bypass:true,pause:false,hidden:false,log:false,logFile:'log.txt'},
 iw:{source:'',setup:'install.ps1',output:'',quiet:true},
-det:{type:'registry',regPath:'',regValue:'',expected:'',filePath:'',version:'',serviceName:''}};
+det:{type:'registry',regPath:'',regValue:'',expected:'',filePath:'',version:'',serviceName:''},
+sc:{name:'',exe:'',silent:'',unsilent:'',detType:'file',detPath:'',detReg:'',detVal:'',detExp:'',version:'',shortcuts:false,scNames:'',preRemove:false,preName:'',postSteps:'',basePath:'E:\\\\Deployments'}};
 
 const $=id=>document.getElementById(id);
 const esc=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML;};
@@ -148,6 +149,7 @@ ${S.path?`<button class="b" onclick="S.path='';persist()" style="font-size:8px;b
 </div>
 <div style="display:flex;gap:6px">
 <button onclick="toggleAdd()" style="background:${S.showAdd?'#ff3e3e22':'#00ff9f11'};border:1px solid ${S.showAdd?'#ff3e3e44':'#00ff9f33'};color:${S.showAdd?'#ff3e3e':'#00ff9f'};padding:5px 10px;border-radius:4px;font-size:10px;font-weight:600">${S.showAdd?'\u2715':'+ NEW'}</button>
+<button class="b" onclick="exportUSB()" style="border-color:#c77dff33;color:#c77dff;font-size:10px;padding:5px 8px" title="Export read-only USB copy">\u2b07 USB</button>
 <button class="b" onclick="manualSync()" style="border-color:#333;color:#555;font-size:10px;padding:5px 8px">\u21bb</button>
 </div></div>
 <div style="position:relative"><span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:#555;font-size:12px">\u2315</span>
@@ -336,6 +338,89 @@ S.det.type==='file'?`
 <pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:10px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap">${esc(genDet())}</pre>
 </div></div>
 
+<!-- DEPLOYMENT SCAFFOLD -->
+<div style="border:1px solid #1a1a2e;border-radius:6px;margin-bottom:12px;background:#0c0c14;overflow:hidden">
+<div style="padding:10px 14px;border-bottom:1px solid #1a1a2e;display:flex;align-items:center;gap:8px">
+<span style="font-size:14px;color:#ef476f;font-weight:700;letter-spacing:1px">SCAFFOLD</span>
+<span style="font-size:9px;color:#444">Generate full deployment package</span></div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">APP NAME</label>
+<input value="${esc(S.sc.name)}" oninput="S.sc.name=this.value;render()" placeholder="Python 3.12"></div>
+
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">INSTALLER FILENAME</label>
+<input value="${esc(S.sc.exe)}" oninput="S.sc.exe=this.value;render()" placeholder="python-3.12.4-amd64.exe"></div>
+
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">SILENT INSTALL ARGS</label>
+<input value="${esc(S.sc.silent)}" oninput="S.sc.silent=this.value;render()" placeholder="/quiet InstallAllUsers=1 PrependPath=1"></div>
+
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">SILENT UNINSTALL ARGS</label>
+<input value="${esc(S.sc.unsilent)}" oninput="S.sc.unsilent=this.value;render()" placeholder="/uninstall /quiet"></div>
+
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">APP VERSION (optional)</label>
+<input value="${esc(S.sc.version)}" oninput="S.sc.version=this.value;render()" placeholder="3.12.4"></div>
+
+<div style="border:1px solid #1a1a2e;border-radius:5px;padding:10px;background:#0a0a12">
+<label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:6px">DETECTION METHOD</label>
+<div style="display:flex;gap:6px;margin-bottom:8px">
+${['file','registry'].map(t=>\`<button class="b" onclick="S.sc.detType='\${t}';render()" style="flex:1;text-align:center;font-size:10px;\${S.sc.detType===t?'border-color:#ef476f55;background:#ef476f0d;color:#ef476f':''}">\${t.charAt(0).toUpperCase()+t.slice(1)}</button>\`).join('')}</div>
+\${S.sc.detType==='file'?\`<input value="\${esc(S.sc.detPath)}" oninput="S.sc.detPath=this.value;render()" placeholder="C:\\\\Program Files\\\\Python312\\\\python.exe">\`:
+\`<input value="\${esc(S.sc.detReg)}" oninput="S.sc.detReg=this.value;render()" placeholder="HKLM:\\\\SOFTWARE\\\\..." style="margin-bottom:4px">
+<input value="\${esc(S.sc.detVal)}" oninput="S.sc.detVal=this.value;render()" placeholder="Registry value name" style="margin-bottom:4px">
+<input value="\${esc(S.sc.detExp)}" oninput="S.sc.detExp=this.value;render()" placeholder="Expected value">\`}
+</div>
+
+<div style="border:1px solid #1a1a2e;border-radius:5px;padding:10px;background:#0a0a12">
+<label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:6px">POST-INSTALL OPTIONS</label>
+<div class="tgl" onclick="S.sc.shortcuts=!S.sc.shortcuts;render()"><div class="tgl-t\${S.sc.shortcuts?' on':''}"><div class="tgl-k"></div></div><span>Copy shortcuts to Public Desktop</span></div>
+\${S.sc.shortcuts?\`<input value="\${esc(S.sc.scNames)}" oninput="S.sc.scNames=this.value;render()" placeholder="Python.lnk, IDLE.lnk (comma separated)" style="margin-left:44px;width:calc(100% - 44px);font-size:10px;padding:5px 8px">\`:''}
+<div class="tgl" onclick="S.sc.preRemove=!S.sc.preRemove;render()"><div class="tgl-t\${S.sc.preRemove?' on':''}"><div class="tgl-k"></div></div><span>Pre-remove old version first</span></div>
+\${S.sc.preRemove?\`<input value="\${esc(S.sc.preName)}" oninput="S.sc.preName=this.value;render()" placeholder="Old app display name in registry" style="margin-left:44px;width:calc(100% - 44px);font-size:10px;padding:5px 8px">\`:''}
+</div>
+
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">BASE PATH</label>
+<div style="display:flex;gap:4px;margin-bottom:4px">
+\${['E:\\\\Deployments','C:\\\\IntuneApps','E:\\\\Apps'].map(p=>\`<button class="b" onclick="S.sc.basePath='\${p}';render()" style="font-size:8px;\${S.sc.basePath===p?'border-color:#ef476f44;color:#ef476f':''}">$\{p.split('\\\\\\\\').pop()}</button>\`).join('')}
+</div>
+<input value="\${esc(S.sc.basePath)}" oninput="S.sc.basePath=this.value;render()" placeholder="E:\\\\Deployments"></div>
+
+<div style="margin-top:4px;font-size:9px;color:#444;border:1px solid #1a1a2e;border-radius:4px;padding:8px;background:#08080e">
+<div style="color:#ef476f;font-weight:600;margin-bottom:4px">FOLDER STRUCTURE:</div>
+<div style="color:#666;line-height:1.6">\${esc(scFolder())}</div></div>
+
+<div style="display:flex;gap:4px;margin-top:4px">
+<button class="b" onclick="copy(genScInstall(),'sc-i')" style="flex:1;text-align:center;background:\${S.cop==='sc-i'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">\${S.cop==='sc-i'?'\u2713':'install.ps1'}</button>
+<button class="b" onclick="copy(genScUninstall(),'sc-u')" style="flex:1;text-align:center;background:\${S.cop==='sc-u'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">\${S.cop==='sc-u'?'\u2713':'uninstall.ps1'}</button>
+<button class="b" onclick="copy(genScDetect(),'sc-d')" style="flex:1;text-align:center;background:\${S.cop==='sc-d'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">\${S.cop==='sc-d'?'\u2713':'detect.ps1'}</button>
+<button class="b" onclick="copy(genScBat(),'sc-b')" style="flex:1;text-align:center;background:\${S.cop==='sc-b'?'#00ff9f33':'#ef476f11'};border-color:#ef476f33;color:#ef476f;font-size:9px;font-weight:600">\${S.cop==='sc-b'?'\u2713':'Run.bat'}</button>
+</div>
+
+<div style="margin-top:8px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+<label style="font-size:9px;color:#555;letter-spacing:1px">INSTALL.PS1</label>
+<button class="b" onclick="copy(genScInstall(),'sc-ip')" style="font-size:8px;border-color:#333;color:#777">\${S.cop==='sc-ip'?'\u2713':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">\${esc(genScInstall())}</pre></div>
+
+<div style="margin-top:8px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+<label style="font-size:9px;color:#555;letter-spacing:1px">UNINSTALL.PS1</label>
+<button class="b" onclick="copy(genScUninstall(),'sc-up')" style="font-size:8px;border-color:#333;color:#777">\${S.cop==='sc-up'?'\u2713':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">\${esc(genScUninstall())}</pre></div>
+
+<div style="margin-top:8px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+<label style="font-size:9px;color:#555;letter-spacing:1px">DETECT.PS1</label>
+<button class="b" onclick="copy(genScDetect(),'sc-dp')" style="font-size:8px;border-color:#333;color:#777">\${S.cop==='sc-dp'?'\u2713':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">\${esc(genScDetect())}</pre></div>
+
+<div style="margin-top:8px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+<label style="font-size:9px;color:#555;letter-spacing:1px">RUN-INSTALL.BAT</label>
+<button class="b" onclick="copy(genScBat(),'sc-bp')" style="font-size:8px;border-color:#333;color:#777">\${S.cop==='sc-bp'?'\u2713':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:9px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto">\${esc(genScBat())}</pre></div>
+
+</div></div>
+
 </div>
 <div style="padding:16px;text-align:center;border-top:1px solid #111;color:#1a1a2e;font-size:8px;letter-spacing:2px">POWERED BY BOTTLEDPIXELS</div>`;
 }
@@ -367,6 +452,94 @@ return`$targetFile = "${f}"\nif (Test-Path $targetFile) {\n    Write-Host "Detec
 const sn=d.serviceName||'ServiceName';
 return`$svc = Get-Service -Name "${sn}" -ErrorAction SilentlyContinue\nif ($svc -and $svc.Status -eq 'Running') {\n    Write-Host "Detected - ${sn} running"\n    exit 0\n}\nWrite-Host "Not detected"\nexit 1`;}
 
+function scSlug(){return (S.sc.name||'AppName').replace(/[^a-zA-Z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');}
+function scFolder(){const s=scSlug();const b=(S.sc.basePath||'E:\\Deployments').replace(/[\\\/]$/,'');
+let t=`${b}\\${s}\\\n  source\\\n    ${S.sc.exe||'installer.exe'}\n    install.ps1`;
+if(S.sc.shortcuts){const scs=(S.sc.scNames||'App.lnk').split(',').map(x=>x.trim()).filter(Boolean);
+scs.forEach(sc=>{t+=`\n    ${sc}`;});}
+t+=`\n  uninstall.ps1\n  detect.ps1\n  Run-Install.bat\n  Run-Uninstall.bat`;return t;}
+
+function genScInstall(){const s=S.sc;const exe=s.exe||'installer.exe';const args=s.silent||'/quiet';
+let lines=[];
+lines.push(`# install.ps1 — ${s.name||'App'} deployment`);
+lines.push(`# Run as SYSTEM (Intune) or Admin (local BAT)`);
+lines.push(`$ErrorActionPreference = 'Stop'`);
+lines.push(`$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path`);
+lines.push('');
+if(s.preRemove){const pn=s.preName||'OldAppName';
+lines.push(`# Pre-remove old version`);
+lines.push(`$old = Get-ItemProperty "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*",`);
+lines.push(`    "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*" -EA SilentlyContinue |`);
+lines.push(`    Where-Object { $_.DisplayName -match "${pn}" }`);
+lines.push(`if ($old) {`);
+lines.push(`    $unstr = $old.UninstallString`);
+lines.push(`    if ($unstr -match 'msiexec') {`);
+lines.push(`        $guid = [regex]::Match($unstr, '\\{[^}]+\\}').Value`);
+lines.push(`        Start-Process msiexec.exe -ArgumentList "/x $guid /qn /norestart" -Wait`);
+lines.push(`    } else {`);
+lines.push(`        Start-Process cmd.exe -ArgumentList "/c $unstr /S" -Wait`);
+lines.push(`    }`);
+lines.push(`    Write-Host "Old version removed"`);
+lines.push(`}`);
+lines.push('');}
+lines.push(`# Install`);
+lines.push(`$installer = Join-Path $scriptDir "${exe}"`);
+lines.push(`Write-Host "Installing ${s.name||'App'}..."`);
+lines.push(`Start-Process -FilePath $installer -ArgumentList "${args}" -Wait`);
+lines.push('');
+if(s.detType==='file'&&s.detPath){lines.push(`# Verify install`);
+lines.push(`if (-not (Test-Path "${s.detPath}")) {`);
+lines.push(`    Write-Host "ERROR: Install verification failed" -ForegroundColor Red`);
+lines.push(`    exit 1`);
+lines.push(`}`);
+lines.push('');}
+if(s.shortcuts){const scs=(s.scNames||'App.lnk').split(',').map(x=>x.trim()).filter(Boolean);
+lines.push(`# Copy shortcuts to Public Desktop`);
+scs.forEach(sc=>{lines.push(`Copy-Item (Join-Path $scriptDir "${sc}") "C:\\Users\\Public\\Desktop\\" -Force`);});
+lines.push(`Write-Host "Shortcuts placed on Public Desktop"`);
+lines.push('');}
+lines.push(`Write-Host "${s.name||'App'} installed successfully"`);
+lines.push(`exit 0`);
+return lines.join('\n');}
+
+function genScUninstall(){const s=S.sc;const exe=s.exe||'installer.exe';const args=s.unsilent||'/uninstall /quiet';
+let lines=[];
+lines.push(`# uninstall.ps1 — ${s.name||'App'} removal`);
+lines.push(`$ErrorActionPreference = 'Stop'`);
+lines.push('');
+lines.push(`# Find uninstall string from registry`);
+lines.push(`$app = Get-ItemProperty "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*",`);
+lines.push(`    "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*" -EA SilentlyContinue |`);
+lines.push(`    Where-Object { $_.DisplayName -match "${s.name||'AppName'}" }`);
+lines.push('');
+lines.push(`if ($app) {`);
+lines.push(`    $unstr = $app.UninstallString`);
+lines.push(`    if ($unstr -match 'msiexec') {`);
+lines.push(`        $guid = [regex]::Match($unstr, '\\{[^}]+\\}').Value`);
+lines.push(`        Start-Process msiexec.exe -ArgumentList "/x $guid /qn /norestart" -Wait`);
+lines.push(`    } else {`);
+lines.push(`        Start-Process cmd.exe -ArgumentList "/c $unstr ${args}" -Wait`);
+lines.push(`    }`);
+lines.push(`    Write-Host "${s.name||'App'} removed"`);
+lines.push(`} else {`);
+lines.push(`    Write-Host "${s.name||'App'} not found — nothing to remove"`);
+lines.push(`}`);
+if(s.shortcuts){const scs=(s.scNames||'App.lnk').split(',').map(x=>x.trim()).filter(Boolean);
+lines.push('');lines.push(`# Remove shortcuts`);
+scs.forEach(sc=>{lines.push(`Remove-Item "C:\\Users\\Public\\Desktop\\${sc}" -Force -EA SilentlyContinue`);});}
+lines.push('');lines.push(`exit 0`);
+return lines.join('\n');}
+
+function genScDetect(){const s=S.sc;
+if(s.detType==='file'){const f=s.detPath||'C:\\Program Files\\App\\app.exe';
+if(s.version)return`$targetFile = "${f}"\n$requiredVersion = "${s.version}"\nif (Test-Path $targetFile) {\n    $ver = (Get-Item $targetFile).VersionInfo.ProductVersion\n    if ([version]$ver -ge [version]$requiredVersion) {\n        Write-Host "Detected v$ver"\n        exit 0\n    }\n}\nWrite-Host "Not detected"\nexit 1`;
+return`$targetFile = "${f}"\nif (Test-Path $targetFile) {\n    Write-Host "Detected"\n    exit 0\n}\nWrite-Host "Not detected"\nexit 1`;}
+const rp=s.detReg||'HKLM:\\SOFTWARE\\...';const rv=s.detVal||'ValueName';const rx=s.detExp||'ExpectedValue';
+return`$regPath = "${rp}"\n$regValue = "${rv}"\n$expected = "${rx}"\n\ntry {\n    $val = (Get-ItemProperty -Path $regPath -Name $regValue -ErrorAction Stop).$regValue\n    if ($val -match $expected) {\n        Write-Host "Detected"\n        exit 0\n    }\n} catch {}\nWrite-Host "Not detected"\nexit 1`;}
+
+function genScBat(){const slug=scSlug();
+return`@echo off\n:: Run-Install.bat — ${S.sc.name||'App'} local deployment\n:: Simulates Intune Win32 deployment context\n\nnet session >nul 2>&1\nif %errorlevel% neq 0 (\n    powershell -Command "Start-Process cmd -ArgumentList '/c \\"%~f0\\"' -Verb RunAs"\n    exit /b\n)\n\necho.\necho  ========================================\necho   ${(S.sc.name||'App').toUpperCase()} — LOCAL DEPLOY\necho  ========================================\necho.\n\npowershell.exe -ExecutionPolicy Bypass -NoProfile -File "%~dp0source\\install.ps1"\n\necho.\necho  Done.\npause`;}
+
 // ═══ ACTIONS ═══
 function getCode(id){const e=S.entries.find(x=>x.id===id);return e?e.code:'';}
 function toggleAdd(){S.eid=null;S.ne={title:'',category:'Custom',tags:'',language:'powershell',description:'',code:'',scriptFile:'',packageUrl:''};S.showAdd=!S.showAdd;render();}
@@ -397,6 +570,58 @@ if(!r.ok)throw new Error(`Error ${r.status}`);const d=await r.json();if(!d.files
 localStorage.setItem('0xb-pat',p);localStorage.setItem('0xb-gid',g);S.pat=p;S.gid=g;S.setup=true;loadData();}
 catch(err){e.textContent=err.message;e.style.display='block';e.style.color='#ff3e3e';}}
 function manualSync(){if(S.pending)gPush();else loadData();}
+
+function exportUSB(){
+var ts=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+var dataStr=JSON.stringify(S.entries);
+var cStr=JSON.stringify(C);
+var css='*{box-sizing:border-box;margin:0;padding:0}html,body{background:#0a0a0f;color:#e0e0e0;font-family:IBM Plex Mono,Fira Code,monospace;min-height:100vh}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0a0a0f}::-webkit-scrollbar-thumb{background:#1a1a2e;border-radius:3px}::selection{background:#00ff9f33;color:#00ff9f}@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}input{font-family:inherit;background:#111118;border:1px solid #1a1a2e;border-radius:4px;color:#e0e0e0;font-size:12px;padding:8px 10px;outline:none;width:100%}input:focus{border-color:#00ff9f44}button{font-family:inherit;cursor:pointer;border:none;background:none}.b{padding:5px 10px;border-radius:4px;font-size:10px;border:1px solid #1a1a2e;background:transparent;transition:all .15s}.b:active{transform:scale(.97)}.card{margin-bottom:6px;border-radius:6px;overflow:hidden;border:1px solid #1a1a2e;background:#0c0c14;transition:border-color .2s}.card:hover{border-color:#222}.card.ex{background:#0d0d18}.tg{font-size:9px;padding:2px 6px;border-radius:3px;background:#1a1a2e;color:#888;cursor:pointer;display:inline-block}.pill{padding:4px 8px;border-radius:4px;font-size:9px;font-weight:600;white-space:nowrap;letter-spacing:.5px;cursor:pointer;border:1px solid #1a1a2e;background:transparent;color:#666;transition:all .15s}.pill:active{transform:scale(.96)}';
+var js=[];
+js.push('var C='+cStr+';');
+js.push('var LC={powershell:"#012456",cmd:"#1a1a2e",plaintext:"#2a2a2a"};');
+js.push('var entries='+dataStr+';');
+js.push('var search="",cat="All",exp=null,cop=null;');
+js.push('function $(id){return document.getElementById(id);}');
+js.push('function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML;}');
+js.push('function copy(t,id){navigator.clipboard.writeText(t);cop=id;render();setTimeout(function(){cop=null;render();},1500);}');
+js.push('function render(){var fl=entries.filter(function(e){var cm=cat==="All"||e.category===cat;if(!search.trim())return cm;var q=search.toLowerCase();return cm&&(e.title.toLowerCase().indexOf(q)!==-1||e.description.toLowerCase().indexOf(q)!==-1||(e.tags||[]).some(function(t){return t.indexOf(q)!==-1})||e.code.toLowerCase().indexOf(q)!==-1);});');
+js.push('var so=fl.filter(function(e){return e.pinned}).concat(fl.filter(function(e){return!e.pinned}));');
+js.push('var uc=[];entries.forEach(function(e){if(uc.indexOf(e.category)===-1)uc.push(e.category);});');
+js.push('var cs=["All"];Object.keys(C).forEach(function(c){if(uc.indexOf(c)!==-1)cs.push(c);});');
+js.push('var o="<div style=\\"border-bottom:1px solid #1a1a2e;padding:12px 16px;background:linear-gradient(180deg,#0f0f1a,#0a0a0f);position:sticky;top:0;z-index:100\\">";');
+js.push('o+="<div style=\\"display:flex;align-items:center;justify-content:space-between;margin-bottom:10px\\"><div style=\\"display:flex;align-items:center;gap:8px\\"><span style=\\"font-size:14px;color:#00ff9f;font-weight:700;letter-spacing:2px\\">0xB<span style=\\"color:#555;font-weight:400\\">://</span>WIKI</span><span style=\\"font-size:8px;padding:2px 6px;border-radius:3px;background:#c77dff15;color:#c77dff;font-weight:600\\">USB</span><span style=\\"font-size:7px;color:#333\\">'+ts+'</span></div><span style=\\"font-size:8px;color:#333\\">READ-ONLY</span></div>";');
+js.push('o+="<div style=\\"position:relative\\"><span style=\\"position:absolute;left:8px;top:50%;transform:translateY(-50%);color:#555;font-size:12px\\">\\u2315</span><input value=\\""+esc(search)+"\\" oninput=\\"search=this.value;render()\\" placeholder=\\"search commands, tags, code...\\" style=\\"padding:8px 10px 8px 28px;border-radius:5px;font-size:12px\\"></div>";');
+js.push('o+="<div style=\\"display:flex;gap:4px;margin-top:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none\\">";');
+js.push('cs.forEach(function(c){var m=C[c];var a=cat===c;var col=m?m.c:"#00ff9f";var icon=m?m.i:"";o+="<button onclick=\\"cat=\'"+c+"\';render()\\" class=\\"pill\\" style=\\""+(a?"border-color:"+col+"66;background:"+col+"15;color:"+col:"")+"\\">"+icon+" "+c.toUpperCase()+"</button>";});');
+js.push('o+="</div></div><div style=\\"padding:10px 12px\\"><div style=\\"font-size:9px;color:#444;margin-bottom:8px;letter-spacing:1px\\">"+so.length+" ENTRIES</div>";');
+js.push('if(so.length===0)o+="<div style=\\"text-align:center;padding:40px;color:#444\\">No entries found.</div>";');
+js.push('so.forEach(function(e,i){o+=renderCard(e,i);});');
+js.push('o+="</div><div style=\\"padding:16px;text-align:center;border-top:1px solid #111\\"><div style=\\"color:#1a1a2e;font-size:8px;letter-spacing:2px\\">POWERED BY BOTTLEDPIXELS</div></div>";');
+js.push('$("app").innerHTML=o;}');
+js.push('function renderCard(e,i){var m=C[e.category]||{i:"",c:"#adb5bd"};var ex=exp===e.id;var o="";');
+js.push('o+="<div class=\\"card"+(ex?" ex":"")+" \\" style=\\"border-color:"+(ex?m.c+"44":"#1a1a2e")+";animation:slideIn .12s ease-out "+(i*.015)+"s both\\">";');
+js.push('o+="<div onclick=\\"exp=exp===\'"+e.id+"\'?null:\'"+e.id+"\';render()\\" style=\\"padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:8px\\">";');
+js.push('o+="<div style=\\"flex:1;min-width:0\\"><div style=\\"display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap\\">";');
+js.push('if(e.pinned)o+="<span style=\\"color:#ffbe0b;font-size:9px\\">\\u2605</span>";');
+js.push('o+="<span style=\\"font-size:12px;font-weight:600;color:#e8e8e8\\">"+esc(e.title)+"</span>";');
+js.push('o+="<span style=\\"font-size:8px;padding:1px 5px;border-radius:3px;background:"+m.c+"18;color:"+m.c+"\\">"+e.category.toUpperCase()+"</span>";');
+js.push('if((e.tags||[]).indexOf("mine")!==-1)o+="<span style=\\"font-size:8px;padding:1px 5px;border-radius:3px;background:#ffbe0b15;color:#ffbe0b\\">MINE</span>";');
+js.push('o+="</div><div style=\\"font-size:10px;color:#666;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:"+(ex?"normal":"nowrap")+"\\">"+esc(e.description)+"</div></div>";');
+js.push('o+="<span style=\\"color:#444;font-size:9px;flex-shrink:0;margin-top:2px\\">"+(ex?"\\u25b2":"\\u25bc")+"</span></div>";');
+js.push('if(ex){o+="<div style=\\"animation:slideIn .12s\\"><div style=\\"padding:0 12px 6px;display:flex;gap:3px;flex-wrap:wrap\\">";');
+js.push('(e.tags||[]).forEach(function(t){if(t!=="mine")o+="<span class=\\"tg\\" onclick=\\"search=\'"+t+"\';cat=\'All\';render()\\">#"+t+"</span>";});');
+js.push('var lc=LC[e.language]||"#1a1a2e";o+="<span class=\\"tg\\" style=\\"background:"+lc+";color:"+(e.language==="powershell"?"#5391fe":"#aaa")+"\\">"+e.language+"</span></div>";');
+js.push('o+="<div style=\\"position:relative;margin:0 12px 8px\\">";');
+js.push('o+="<button class=\\"b\\" onclick=\\"event.stopPropagation();copy(entries.find(function(x){return x.id===\'"+e.id+"\'}).code,\'"+e.id+"\')\\" style=\\"position:absolute;top:6px;right:6px;z-index:2;background:"+(cop===e.id?"#00ff9f33":"#1a1a2e")+";border-color:"+(cop===e.id?"#00ff9f":"#333")+";color:"+(cop===e.id?"#00ff9f":"#777")+";font-size:9px;font-weight:600;padding:3px 8px\\">"+(cop===e.id?"\\u2713 COPIED":"COPY")+"</button>";');
+js.push('o+="<pre style=\\"background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:12px;padding-top:30px;overflow-x:auto;font-size:10px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word\\">"+esc(e.code)+"</pre></div></div>";}');
+js.push('o+="</div>";return o;}');
+js.push('render();');
+var jsBlock=js.join('\n');
+var full='<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>0xB Wiki — USB</title><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>'+css+'</style></head><body><div id="app"></div><scr'+'ipt>'+jsBlock+'</scr'+'ipt></body></html>';
+var blob=new Blob([full],{type:'text/html'});
+var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='0xB-Wiki.html';a.click();
+URL.revokeObjectURL(a.href);
+}
 function logout(){if(!confirm('Disconnect from GitHub?'))return;localStorage.removeItem('0xb-pat');localStorage.removeItem('0xb-gid');
 S.pat='';S.gid='';S.setup=false;render();}
 

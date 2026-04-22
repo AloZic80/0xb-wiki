@@ -1,0 +1,1353 @@
+{
+  "version": 2,
+  "scriptPath": "",
+  "lastSync": "",
+  "entries": [
+    {
+      "id": "pkg-packager",
+      "title": "Win32 Packager GUI",
+      "category": "Scripts",
+      "tags": [
+        "powershell",
+        "intune",
+        "win32",
+        "packaging",
+        "mine"
+      ],
+      "language": "powershell",
+      "description": "WPF GUI tool for packaging Win32 apps for Intune deployment.",
+      "code": "powershell.exe -ExecutionPolicy Bypass -File \"C:\\Tools\\Win32_Packager.ps1\"\n\n# Source file structure:\n# C:\\IntuneApps\\[AppName]\\source\\\n# Logs output to: C:\\Logs\\",
+      "scriptFile": "Win32_Packager.ps1",
+      "pinned": true,
+      "history": []
+    },
+    {
+      "id": "testlab-v11",
+      "title": "TestLab v11",
+      "category": "Scripts",
+      "tags": [
+        "powershell",
+        "testing",
+        "diff",
+        "snapshots",
+        "mine"
+      ],
+      "language": "powershell",
+      "description": "Full diff engine with Take-Snapshot / Build-DiffArtifacts, system app whitelist, uninstaller priority chain.",
+      "code": "# TestLab v11 Features:\n# - JSON config persistence\n# - Take-Snapshot > captures installed state\n# - Build-DiffArtifacts > compares before/after\n# - DIFF-TRACKED vs LEGACY SCAN badges\n# - System app whitelist\n# - Uninstaller priority chain\n# - DROP TO NUKE easter egg zone",
+      "scriptFile": "TestLab_v11.ps1",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "autopilot-hash",
+      "title": "Get-AutopilotHash.ps1",
+      "category": "Scripts",
+      "tags": [
+        "powershell",
+        "autopilot",
+        "intune",
+        "enrollment",
+        "mine"
+      ],
+      "language": "powershell",
+      "description": "Modified \u2014 uses asset tag for filename only, NOT as Group Tag.",
+      "code": "# Run from elevated PowerShell on target device\n# Modified: asset tag > filename only (not Group Tag)\n\nInstall-Script -Name Get-WindowsAutopilotInfo -Force\nGet-WindowsAutopilotInfo -OutputFile \"C:\\Logs\\AutopilotHash.csv\"",
+      "scriptFile": "Get-AutopilotHash.ps1",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "onedrive-removal",
+      "title": "OneDrive Removal (SYSTEM + User)",
+      "category": "Scripts",
+      "tags": [
+        "powershell",
+        "onedrive",
+        "intune",
+        "removal",
+        "mine"
+      ],
+      "language": "powershell",
+      "description": "Two-part removal: v8 SYSTEM context script + v2 user-context script deployed separately.",
+      "code": "# --- SYSTEM context removal (v8) ---\nGet-Process OneDrive -ErrorAction SilentlyContinue | Stop-Process -Force\n$paths = @(\n    \"$env:SystemRoot\\System32\\OneDriveSetup.exe\",\n    \"$env:SystemRoot\\SysWOW64\\OneDriveSetup.exe\"\n)\nforeach ($p in $paths) {\n    if (Test-Path $p) { Start-Process $p \"/uninstall\" -Wait }\n}\n\n# --- User context removal (v2) ---\n# Deployed separately \u2014 targets per-user install\n# Must run in USER context via Intune",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "elev-self-elevate",
+      "title": "Self-Elevating Script Template",
+      "category": "Elevation",
+      "tags": [
+        "elevation",
+        "admin",
+        "uac",
+        "powershell",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Drop this at the top of any PS1 \u2014 it re-launches itself as admin if needed.",
+      "code": "# Self-elevate: paste at top of any script\nif (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()\n  ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {\n    Start-Process powershell.exe \"-ExecutionPolicy Bypass -File \\\"$PSCommandPath\\\"\" -Verb RunAs\n    exit\n}\nWrite-Host \"Running elevated...\" -ForegroundColor Green",
+      "pinned": true,
+      "history": []
+    },
+    {
+      "id": "elev-methods",
+      "title": "All Elevation Methods",
+      "category": "Elevation",
+      "tags": [
+        "elevation",
+        "admin",
+        "uac",
+        "powershell",
+        "cmd",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Every way to elevate \u2014 PS, CMD, PsExec, Task Scheduler.",
+      "code": "# --- PowerShell ---\nStart-Process powershell -Verb RunAs\nStart-Process powershell -Verb RunAs -ArgumentList \"-Command\", \"Your-Command\"\n\n# --- CMD ---\n# Right-click > Run as administrator\n# Or from PS:\nStart-Process cmd -Verb RunAs\n\n# --- PsExec (SYSTEM context) ---\n# psexec -i -s cmd.exe\n# psexec -i -s powershell.exe\n\n# --- Task Scheduler (run without UAC prompt) ---\n# schtasks /create /tn \"MyTask\" /tr \"powershell -File C:\\script.ps1\" /sc once /st 00:00 /rl highest /ru SYSTEM\n# schtasks /run /tn \"MyTask\"\n\n# --- Check if elevated ---\n[bool]([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()\n  ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)",
+      "pinned": true,
+      "history": []
+    },
+    {
+      "id": "elev-runas",
+      "title": "Run As Different User",
+      "category": "Elevation",
+      "tags": [
+        "runas",
+        "credentials",
+        "cmd",
+        "elevation",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Run processes under a different user context.",
+      "code": ":: Run CMD as a different user\nrunas /user:DOMAIN\\username cmd.exe\n\n:: Network creds only (local stays current)\nrunas /netonly /user:DOMAIN\\admin \"mmc.exe\"\n\n:: Run PowerShell as another user\nrunas /user:DOMAIN\\admin \"powershell.exe -ExecutionPolicy Bypass\"\n\n:: Save credentials (Windows Credential Manager)\ncmdkey /add:servername /user:DOMAIN\\admin /pass:password\ncmdkey /list\ncmdkey /delete:servername",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "elev-psexec",
+      "title": "PsExec \u2014 Run as SYSTEM",
+      "category": "Elevation",
+      "tags": [
+        "psexec",
+        "system",
+        "sysinternals",
+        "elevation",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Launch processes as NT AUTHORITY\\SYSTEM \u2014 mimics Intune Win32 deployment context.",
+      "code": ":: CMD as SYSTEM\npsexec -i -s cmd.exe\n\n:: PowerShell as SYSTEM\npsexec -i -s powershell.exe\n\n:: Run script as SYSTEM\npsexec -s powershell.exe -ExecutionPolicy Bypass -File \"C:\\path\\script.ps1\"\n\n:: Regedit as SYSTEM (see Default User HKCU)\npsexec -i -s regedit.exe\n\n:: Remote machine as SYSTEM\npsexec \\\\PC-NAME -s cmd.exe\n\n:: Download: https://learn.microsoft.com/en-us/sysinternals/downloads/psexec",
+      "pinned": true,
+      "history": []
+    },
+    {
+      "id": "elev-execpolicy",
+      "title": "Execution Policy Management",
+      "category": "Elevation",
+      "tags": [
+        "powershell",
+        "execution-policy",
+        "security",
+        "bypass",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Check, set, and bypass PowerShell execution policies.",
+      "code": "# Check current\nGet-ExecutionPolicy -List\n\n# Bypass current session only\nSet-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force\n\n# Persist for current user\nSet-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force\n\n# Run single script with bypass\npowershell.exe -ExecutionPolicy Bypass -File \"C:\\script.ps1\"\n\n# Unblock downloaded script\nUnblock-File -Path \"C:\\script.ps1\"\n\n# Set machine-wide (requires admin)\nSet-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "intune-detect-reg",
+      "title": "Intune Detection: Registry",
+      "category": "Intune",
+      "tags": [
+        "intune",
+        "detection",
+        "registry",
+        "win32",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Detection script template \u2014 registry check. Exit 0 = detected, Exit 1 = not.",
+      "code": "$regPath = \"HKLM:\\SOFTWARE\\Microsoft\\Office\\ClickToRun\\Configuration\"\n$regValue = \"ProductReleaseIds\"\n$expected = \"ProPlus2024Volume\"\n\ntry {\n    $val = (Get-ItemProperty -Path $regPath -Name $regValue -ErrorAction Stop).$regValue\n    if ($val -match $expected) {\n        Write-Host \"Detected\"\n        exit 0\n    }\n} catch {}\nWrite-Host \"Not detected\"\nexit 1",
+      "pinned": true,
+      "history": []
+    },
+    {
+      "id": "intune-detect-file",
+      "title": "Intune Detection: File/Folder",
+      "category": "Intune",
+      "tags": [
+        "intune",
+        "detection",
+        "file",
+        "win32",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Detection via file existence with optional version check.",
+      "code": "# Simple file check\n$targetFile = \"C:\\Program Files\\AppName\\app.exe\"\nif (Test-Path $targetFile) {\n    Write-Host \"Detected\"; exit 0\n}\nWrite-Host \"Not detected\"; exit 1\n\n# With version check\n$targetFile = \"C:\\Program Files\\AppName\\app.exe\"\n$requiredVersion = \"2.1.0\"\nif (Test-Path $targetFile) {\n    $ver = (Get-Item $targetFile).VersionInfo.ProductVersion\n    if ([version]$ver -ge [version]$requiredVersion) {\n        Write-Host \"Detected v$ver\"; exit 0\n    }\n}\nWrite-Host \"Not detected\"; exit 1",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "intune-detect-service",
+      "title": "Intune Detection: Service",
+      "category": "Intune",
+      "tags": [
+        "intune",
+        "detection",
+        "service",
+        "win32",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Detect by Windows service existence and status.",
+      "code": "$serviceName = \"YourServiceName\"\n$svc = Get-Service -Name $serviceName -ErrorAction SilentlyContinue\nif ($svc -and $svc.Status -eq 'Running') {\n    Write-Host \"Detected - $serviceName is running\"\n    exit 0\n}\nWrite-Host \"Not detected\"\nexit 1",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "intune-wipe-delete",
+      "title": "Intune: Wipe vs Delete vs Retire",
+      "category": "Intune",
+      "tags": [
+        "intune",
+        "wipe",
+        "delete",
+        "device",
+        "management",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Critical distinction for device management actions.",
+      "code": "WIPE (Factory Reset):\n  - Removes ALL data, resets to factory\n  - Device record stays in Intune/Entra\n  - Use: reprovisioning, security incident, lost device\n\nDELETE (Remove from Intune):\n  - Removes device RECORD from Intune\n  - Does NOT touch data on the device\n  - Removes management policies\n  - Use: decommissioning, stale records\n\nRETIRE (Selective Wipe):\n  - Removes only company data/profiles\n  - Personal data stays intact\n  - Use: BYOD offboarding\n\nREPROVISIONING ORDER:\n  1. Wipe > wait for reset\n  2. Delete from Intune (if needed)\n  3. Delete from Entra ID\n  4. Delete Autopilot object\n  5. Re-enroll",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "intune-win32-template",
+      "title": "Win32 App Packaging Checklist",
+      "category": "Intune",
+      "tags": [
+        "intune",
+        "win32",
+        "packaging",
+        "intunewin",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Step-by-step for packaging any app as Win32 for Intune.",
+      "code": "1. GET THE INSTALLER\n   - Download .exe or .msi\n   - Find silent install switches (check wiki or /? flag)\n\n2. CREATE SOURCE FOLDER\n   - C:\\IntuneApps\\[AppName]\\source\\\n   - Place installer + any config files inside\n\n3. CREATE INSTALL SCRIPT (install.ps1)\n   - Start-Process -FilePath .\\installer.exe -ArgumentList \"/S\" -Wait\n   - Or: msiexec /i .\\app.msi /qn /norestart\n\n4. CREATE UNINSTALL SCRIPT (uninstall.ps1)\n   - Check registry for UninstallString\n   - Run it silently\n\n5. PACKAGE WITH IntuneWinAppUtil.exe\n   - IntuneWinAppUtil.exe -c .\\source -s install.ps1 -o .\\output\n\n6. UPLOAD TO INTUNE\n   - Apps > Windows > Add > Win32\n   - Upload .intunewin\n   - Install cmd: powershell.exe -ExecutionPolicy Bypass -File .\\install.ps1\n   - Uninstall cmd: powershell.exe -ExecutionPolicy Bypass -File .\\uninstall.ps1\n   - Detection: registry, file, or custom script\n\n7. ASSIGN\n   - Required = auto-install\n   - Available = Company Portal",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "intune-enrollment-fix",
+      "title": "Intune Enrollment Troubleshooting",
+      "category": "Intune",
+      "tags": [
+        "intune",
+        "enrollment",
+        "troubleshooting",
+        "flow"
+      ],
+      "language": "powershell",
+      "description": "Step-by-step when a device won't enroll or sync.",
+      "code": "# 1. Check current enrollment status\ndsregcmd /status\n\n# Look for: AzureAdJoined, DomainJoined, DeviceId\n\n# 2. Check Intune MDM enrollment\nGet-ChildItem \"HKLM:\\SOFTWARE\\Microsoft\\Enrollments\" | ForEach-Object {\n    Get-ItemProperty $_.PSPath | Select-Object ProviderID, UPN\n}\n\n# 3. Force sync\n$Shell = New-Object -ComObject Shell.Application\n$Shell.Open(\"intunemanagementextension://syncapp\")\n# Or: Settings > Accounts > Access work or school > Info > Sync\n\n# 4. Check IME logs\nGet-Content \"C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs\\IntuneManagementExtension.log\" -Tail 50\n\n# 5. Re-enroll (nuclear option)\n# Remove from Intune portal > Delete from Entra > dsregcmd /leave > Reboot > Re-join",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "autopilot-troubleshoot",
+      "title": "Autopilot Troubleshooting Flow",
+      "category": "Intune",
+      "tags": [
+        "autopilot",
+        "troubleshooting",
+        "enrollment",
+        "flow"
+      ],
+      "language": "powershell",
+      "description": "When Autopilot gets stuck at any screen.",
+      "code": "# STUCK AT \"Identifying\" or spinning\n# - Check internet connectivity\n# - Check Autopilot profile is assigned\n# - Verify hardware hash was uploaded\n\n# STUCK AT \"Setting up your device\"\n# - Check ESP (Enrollment Status Page) settings\n# - Look for stuck app installs\n# - Shift+F10 for CMD, then:\nGet-ChildItem \"HKLM:\\SOFTWARE\\Microsoft\\Enrollments\"\nGet-Content \"C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs\\*.log\" -Tail 30\n\n# STUCK AT \"Account setup\"\n# - Usually a Win32 app or policy timing out\n# - Check Intune portal for device status\n# - Consider extending ESP timeout\n\n# COLLECT DIAGNOSTICS\nmdmdiagnosticstool -area Autopilot -cab C:\\temp\\autopilot.cab\n\n# RESET AND RETRY\n# Shift+F10 > systemreset -cleanpc\n# Or re-image with bootable USB",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "deploy-intunewinutil",
+      "title": "IntuneWinAppUtil \u2014 Package Builder",
+      "category": "Deployment",
+      "tags": [
+        "intune",
+        "intunewin",
+        "packaging",
+        "deployment",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Build .intunewin packages from source folders.",
+      "code": ":: Basic usage\nIntuneWinAppUtil.exe -c \"C:\\IntuneApps\\AppName\\source\" -s install.ps1 -o \"C:\\IntuneApps\\AppName\\output\"\n\n:: Flags:\n::   -c  Source folder (contains installer + scripts)\n::   -s  Setup file (the main installer or script)\n::   -o  Output folder for .intunewin\n::   -q  Quiet mode (no prompts)\n\n:: Example with quiet mode\nIntuneWinAppUtil.exe -c .\\source -s setup.exe -o .\\output -q\n\n:: Download:\n:: https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "deploy-kms",
+      "title": "KMS Activation (Office/Windows)",
+      "category": "Deployment",
+      "tags": [
+        "kms",
+        "activation",
+        "office",
+        "windows",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "KMS activation commands. Replace kms.yourserver.edu with your KMS host.",
+      "code": ":: --- Office KMS ---\ncd /d \"%ProgramFiles%\\Microsoft Office\\Office16\"\ncscript ospp.vbs /sethst:kms.yourserver.edu\ncscript ospp.vbs /setprt:1688\ncscript ospp.vbs /act\ncscript ospp.vbs /dstatus\n\n:: --- Windows KMS ---\nslmgr /skms kms.yourserver.edu:1688\nslmgr /ato\nslmgr /dli\nslmgr /xpr\n\n:: Check current activation\nslmgr /dlv",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "deploy-bomgar",
+      "title": "BeyondTrust Bomgar Jump Client",
+      "category": "Deployment",
+      "tags": [
+        "beyondtrust",
+        "bomgar",
+        "intune",
+        "remote",
+        "mine"
+      ],
+      "language": "powershell",
+      "description": "Detection and paths for Bomgar Jump Client.",
+      "code": "# Install path (hash varies per deployment)\n# C:\\Program Files\\BeyondTrust\\bomgar-scc\\[hash]\\bomgar-scc.exe\n\n$btPath = \"C:\\Program Files\\BeyondTrust\\bomgar-scc\"\nif (Test-Path $btPath) {\n    $exe = Get-ChildItem -Path $btPath -Recurse -Filter \"bomgar-scc.exe\" -EA SilentlyContinue\n    if ($exe) { Write-Host \"Detected\"; exit 0 }\n}\nWrite-Host \"Not detected\"; exit 1\n\n# Uninstall GUID \u2014 confirm per deployment\n# Check: HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-services",
+      "title": "Service Management",
+      "category": "Sysadmin",
+      "tags": [
+        "services",
+        "powershell",
+        "cmd",
+        "admin",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Start, stop, query, and configure Windows services.",
+      "code": "Get-Service -Name \"wuauserv\"                         # Query\nStart-Service -Name \"wuauserv\"                       # Start\nStop-Service -Name \"wuauserv\" -Force                 # Stop\nRestart-Service -Name \"Spooler\" -Force               # Restart\nSet-Service -Name \"wuauserv\" -StartupType Disabled   # Disable\n\n# Find by display name\nGet-Service | Where-Object { $_.DisplayName -match \"update\" }\n\n# CMD equivalents\n# sc query wuauserv\n# sc stop wuauserv / sc start wuauserv\n# sc config wuauserv start=disabled\n# net start \"Windows Update\" / net stop \"Windows Update\"",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-network",
+      "title": "Network Diagnostics",
+      "category": "Sysadmin",
+      "tags": [
+        "network",
+        "dns",
+        "ping",
+        "ipconfig",
+        "cmd",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Full network troubleshooting toolkit.",
+      "code": ":: IP config\nipconfig /all\nipconfig /release & ipconfig /renew\nipconfig /flushdns\n\n:: DNS\nnslookup google.com\nnslookup -type=MX domain.com\nResolve-DnsName domain.com -Type A\n\n:: Connectivity\nping -n 4 8.8.8.8\nping -t hostname          &:: continuous\ntracert google.com\npathping google.com\n\n:: Ports / connections\nnetstat -an | findstr :443\nnetstat -b                &:: shows which process\nTest-NetConnection -ComputerName server -Port 443\nTest-NetConnection -ComputerName server -Port 3389 -InformationLevel Detailed\n\n:: Wi-Fi\nnetsh wlan show profiles\nnetsh wlan show profile name=\"SSID\" key=clear\nnetsh wlan disconnect\nnetsh wlan connect name=\"SSID\"",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-network-reset",
+      "title": "Full Network Stack Reset",
+      "category": "Sysadmin",
+      "tags": [
+        "network",
+        "reset",
+        "dns",
+        "winsock",
+        "tcp",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "The nuclear network reset \u2014 flush everything, reset stack, reboot.",
+      "code": ":: Flush DNS cache\nipconfig /flushdns\n\n:: Release and renew DHCP\nipconfig /release\nipconfig /renew\n\n:: Reset Winsock catalog\nnetsh winsock reset\n\n:: Reset TCP/IP stack\nnetsh int ip reset\n\n:: Reset firewall to defaults\nnetsh advfirewall reset\n\n:: Flush ARP cache\narp -d *\nnetsh interface ip delete arpcache\n\n:: Flush NetBIOS cache\nnbtstat -R\n\n:: Clear routing table\nroute -f\n\n:: REBOOT REQUIRED after Winsock/TCP reset\nshutdown /r /t 5 /c \"Network stack reset\"",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-registry",
+      "title": "Registry Operations",
+      "category": "Sysadmin",
+      "tags": [
+        "registry",
+        "regedit",
+        "powershell",
+        "cmd",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Read, write, delete, export, import registry keys.",
+      "code": "# --- Read ---\nGet-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\"\n(Get-ItemProperty \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\").ProductName\n\n# --- Write ---\nNew-Item -Path \"HKLM:\\SOFTWARE\\MyApp\" -Force\nSet-ItemProperty -Path \"HKLM:\\SOFTWARE\\MyApp\" -Name \"Version\" -Value \"2.0\" -Type String\n\n# --- Delete ---\nRemove-ItemProperty -Path \"HKLM:\\SOFTWARE\\MyApp\" -Name \"Version\"\nRemove-Item -Path \"HKLM:\\SOFTWARE\\MyApp\" -Recurse\n\n# --- Test ---\nTest-Path \"HKLM:\\SOFTWARE\\MyApp\"\n\n# --- Export / Import (CMD) ---\n# reg export \"HKLM\\SOFTWARE\\MyApp\" C:\\backup.reg\n# reg import C:\\backup.reg\n\n# --- Remote ---\n# reg query \"\\\\PC-NAME\\HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\" /v ProductName",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-sfc-dism",
+      "title": "System File Repair (SFC/DISM)",
+      "category": "Sysadmin",
+      "tags": [
+        "sfc",
+        "dism",
+        "repair",
+        "windows",
+        "corruption",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Repair corrupted system files \u2014 run DISM first, then SFC.",
+      "code": ":: Step 1: DISM (repairs component store)\nDISM /Online /Cleanup-Image /CheckHealth\nDISM /Online /Cleanup-Image /ScanHealth\nDISM /Online /Cleanup-Image /RestoreHealth\n\n:: Step 2: SFC (repairs system files)\nsfc /scannow\n\n:: Step 3: Offline repair from USB/ISO\nDISM /Online /Cleanup-Image /RestoreHealth /Source:D:\\sources\\install.wim\n\n:: Logs:\n:: DISM: C:\\Windows\\Logs\\DISM\\dism.log\n:: SFC:  C:\\Windows\\Logs\\CBS\\CBS.log",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-disk",
+      "title": "Disk & Storage Management",
+      "category": "Sysadmin",
+      "tags": [
+        "disk",
+        "cleanup",
+        "storage",
+        "powershell",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Disk space analysis, cleanup, and management.",
+      "code": "# Check disk space\nGet-PSDrive -PSProvider FileSystem | Select Name,\n    @{N='Used(GB)';E={[math]::Round($_.Used/1GB,2)}},\n    @{N='Free(GB)';E={[math]::Round($_.Free/1GB,2)}}\n\n# Large file finder\nGet-ChildItem C:\\ -Recurse -EA SilentlyContinue |\n    Where-Object { $_.Length -gt 500MB } |\n    Sort-Object Length -Descending |\n    Select FullName, @{N='Size(MB)';E={[math]::Round($_.Length/1MB,2)}}\n\n# Clear temp files\nRemove-Item \"$env:TEMP\\*\" -Recurse -Force -EA SilentlyContinue\nRemove-Item \"C:\\Windows\\Temp\\*\" -Recurse -Force -EA SilentlyContinue\n\n# DISM component cleanup\nDism.exe /Online /Cleanup-Image /StartComponentCleanup /ResetBase\n\n# Disk cleanup wizard\n# cleanmgr /d C: /sageset:1  (configure)\n# cleanmgr /d C: /sagerun:1  (run saved config)",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-users",
+      "title": "Local User & Group Management",
+      "category": "Sysadmin",
+      "tags": [
+        "users",
+        "groups",
+        "accounts",
+        "powershell",
+        "cmd",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Create, modify, delete local users and manage group membership.",
+      "code": "# --- List users ---\nGet-LocalUser\nGet-LocalUser | Where Enabled -eq $true\n\n# --- Create user ---\n$pw = ConvertTo-SecureString \"P@ssw0rd\" -AsPlainText -Force\nNew-LocalUser -Name \"TechUser\" -Password $pw -FullName \"Tech User\" -Description \"IT Support\"\n\n# --- Modify ---\nSet-LocalUser -Name \"TechUser\" -PasswordNeverExpires $true\nDisable-LocalUser -Name \"TechUser\"\nEnable-LocalUser -Name \"TechUser\"\n\n# --- Delete ---\nRemove-LocalUser -Name \"TechUser\"\n\n# --- Group membership ---\nGet-LocalGroupMember -Group \"Administrators\"\nAdd-LocalGroupMember -Group \"Administrators\" -Member \"TechUser\"\nRemove-LocalGroupMember -Group \"Administrators\" -Member \"TechUser\"\n\n# --- CMD ---\n# net user TechUser P@ssw0rd /add\n# net localgroup Administrators TechUser /add\n# net user TechUser /delete",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-scheduled-tasks",
+      "title": "Scheduled Tasks",
+      "category": "Sysadmin",
+      "tags": [
+        "scheduled-tasks",
+        "automation",
+        "powershell",
+        "cmd",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Create, manage, and troubleshoot scheduled tasks.",
+      "code": "# --- List all tasks ---\nGet-ScheduledTask | Where State -ne 'Disabled' | Select TaskName, State\n\n# --- Create task (PowerShell) ---\n$action = New-ScheduledTaskAction -Execute 'powershell.exe' `\n    -Argument '-ExecutionPolicy Bypass -File \"C:\\Scripts\\maintenance.ps1\"'\n$trigger = New-ScheduledTaskTrigger -Daily -At '2:00AM'\n$principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -RunLevel Highest\nRegister-ScheduledTask -TaskName 'DailyMaintenance' -Action $action -Trigger $trigger -Principal $principal\n\n# --- Run now ---\nStart-ScheduledTask -TaskName 'DailyMaintenance'\n\n# --- Delete ---\nUnregister-ScheduledTask -TaskName 'DailyMaintenance' -Confirm:$false\n\n# --- CMD (schtasks) ---\n# schtasks /create /tn \"MyTask\" /tr \"cmd /c echo hello\" /sc daily /st 14:00 /rl highest /ru SYSTEM\n# schtasks /run /tn \"MyTask\"\n# schtasks /delete /tn \"MyTask\" /f\n# schtasks /query /tn \"MyTask\" /v",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-drives",
+      "title": "Mapped Drives & Network Shares",
+      "category": "Sysadmin",
+      "tags": [
+        "drives",
+        "network",
+        "shares",
+        "mapping",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Map, list, and manage network drives.",
+      "code": "# --- Map a drive ---\nNew-PSDrive -Name \"Z\" -PSProvider FileSystem -Root \"\\\\server\\share\" -Persist\n\n# --- With credentials ---\n$cred = Get-Credential\nNew-PSDrive -Name \"Z\" -PSProvider FileSystem -Root \"\\\\server\\share\" -Persist -Credential $cred\n\n# --- List mapped drives ---\nGet-PSDrive -PSProvider FileSystem | Where Root -like '\\\\*'\nnet use\n\n# --- Remove ---\nRemove-PSDrive -Name \"Z\" -Force\nnet use Z: /delete\n\n# --- CMD ---\n# net use Z: \\\\server\\share\n# net use Z: \\\\server\\share /user:DOMAIN\\user password\n# net use Z: /delete\n# net use * /delete /y    (remove all)",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-firewall",
+      "title": "Firewall Management",
+      "category": "Sysadmin",
+      "tags": [
+        "firewall",
+        "security",
+        "powershell",
+        "netsh",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Manage Windows Firewall rules via PowerShell and netsh.",
+      "code": "# --- Check status ---\nGet-NetFirewallProfile | Select Name, Enabled\n\n# --- Create inbound rule ---\nNew-NetFirewallRule -DisplayName 'Allow RDP' -Direction Inbound `\n    -Protocol TCP -LocalPort 3389 -Action Allow -Profile Domain\n\n# --- Create outbound rule ---\nNew-NetFirewallRule -DisplayName 'Block Telemetry' -Direction Outbound `\n    -RemoteAddress '13.107.4.50' -Action Block\n\n# --- List rules ---\nGet-NetFirewallRule | Where Enabled -eq 'True' | Select DisplayName, Direction, Action\n\n# --- Remove rule ---\nRemove-NetFirewallRule -DisplayName 'Allow RDP'\n\n# --- Disable/Enable firewall ---\nSet-NetFirewallProfile -Profile Domain,Public,Private -Enabled False\nSet-NetFirewallProfile -Profile Domain,Public,Private -Enabled True\n\n# --- netsh ---\n# netsh advfirewall show allprofiles\n# netsh advfirewall firewall add rule name=\"Allow 8080\" dir=in action=allow protocol=TCP localport=8080\n# netsh advfirewall reset",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-printers",
+      "title": "Printer Management",
+      "category": "Sysadmin",
+      "tags": [
+        "printers",
+        "spooler",
+        "powershell",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Add, remove, troubleshoot printers and the print spooler.",
+      "code": "# --- List printers ---\nGet-Printer\nGet-Printer | Select Name, DriverName, PortName, Shared\n\n# --- Add network printer ---\nAdd-Printer -ConnectionName \"\\\\printserver\\PrinterName\"\n\n# --- Add local printer ---\nAdd-PrinterPort -Name \"IP_10.0.0.100\" -PrinterHostAddress \"10.0.0.100\"\nAdd-Printer -Name \"OfficeHP\" -DriverName \"HP Universal Printing PCL 6\" -PortName \"IP_10.0.0.100\"\n\n# --- Remove printer ---\nRemove-Printer -Name \"PrinterName\"\n\n# --- Set default ---\n$printer = Get-CimInstance -Class Win32_Printer -Filter \"Name='PrinterName'\"\nInvoke-CimMethod -InputObject $printer -MethodName SetDefaultPrinter\n\n# --- Fix spooler ---\nStop-Service Spooler -Force\nRemove-Item \"C:\\Windows\\System32\\spool\\PRINTERS\\*\" -Force\nStart-Service Spooler\n\n# --- Clear stuck jobs ---\nGet-PrintJob -PrinterName \"PrinterName\" | Remove-PrintJob",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-bitlocker",
+      "title": "BitLocker Management",
+      "category": "Sysadmin",
+      "tags": [
+        "bitlocker",
+        "encryption",
+        "security",
+        "powershell",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Enable, manage, and recover BitLocker encryption.",
+      "code": "# --- Check status ---\nGet-BitLockerVolume\nmanage-bde -status C:\n\n# --- Enable on C: ---\nEnable-BitLocker -MountPoint \"C:\" -RecoveryPasswordProtector\n\n# --- Add TPM protector ---\nAdd-BitLockerKeyProtector -MountPoint \"C:\" -TpmProtector\n\n# --- Backup recovery key to AD ---\nBackup-BitLockerKeyProtector -MountPoint \"C:\" -KeyProtectorId (Get-BitLockerVolume -MountPoint \"C:\").KeyProtector[1].KeyProtectorId\n\n# --- Get recovery key ---\n(Get-BitLockerVolume -MountPoint \"C:\").KeyProtector | Where KeyProtectorType -eq 'RecoveryPassword'\n\n# --- Suspend (for BIOS update) ---\nSuspend-BitLocker -MountPoint \"C:\" -RebootCount 1\n\n# --- Disable ---\nDisable-BitLocker -MountPoint \"C:\"\n\n# --- CMD ---\n# manage-bde -protectors -get C:\n# manage-bde -unlock D: -RecoveryPassword 123456-789012-...",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-event-logs",
+      "title": "Event Log Queries",
+      "category": "Sysadmin",
+      "tags": [
+        "eventlog",
+        "logging",
+        "powershell",
+        "diagnostics",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Query and filter Windows Event Logs.",
+      "code": "# --- Recent errors ---\nGet-WinEvent -LogName System -MaxEvents 20 | Where LevelDisplayName -eq 'Error'\n\n# --- Specific event ID ---\nGet-WinEvent -FilterHashtable @{LogName='System'; ID=41}  # Unexpected shutdown\nGet-WinEvent -FilterHashtable @{LogName='System'; ID=6005,6006}  # Startup/shutdown times\n\n# --- Time range ---\nGet-WinEvent -FilterHashtable @{\n    LogName='Application'\n    StartTime=(Get-Date).AddHours(-24)\n    Level=2  # Error\n}\n\n# --- Logon events ---\nGet-WinEvent -FilterHashtable @{LogName='Security'; ID=4624} -MaxEvents 10\n\n# --- Export to file ---\nGet-WinEvent -LogName System -MaxEvents 100 | Export-Csv \"C:\\Logs\\events.csv\" -NoTypeInformation\n\n# --- Clear a log ---\nClear-EventLog -LogName Application\n\n# --- CMD ---\n# wevtutil qe System /c:10 /f:text\n# wevtutil cl System",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-env-vars",
+      "title": "Environment Variables",
+      "category": "Sysadmin",
+      "tags": [
+        "environment",
+        "variables",
+        "powershell",
+        "cmd",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Get, set, and manage environment variables.",
+      "code": "# --- Read ---\n$env:PATH\n$env:COMPUTERNAME\n$env:USERNAME\n[Environment]::GetEnvironmentVariable('PATH', 'Machine')\n\n# --- Set (session only) ---\n$env:MY_VAR = 'hello'\n\n# --- Set persistent (user) ---\n[Environment]::SetEnvironmentVariable('MY_VAR', 'hello', 'User')\n\n# --- Set persistent (machine, requires admin) ---\n[Environment]::SetEnvironmentVariable('MY_VAR', 'hello', 'Machine')\n\n# --- Add to PATH ---\n$current = [Environment]::GetEnvironmentVariable('PATH', 'Machine')\n[Environment]::SetEnvironmentVariable('PATH', \"$current;C:\\MyTools\", 'Machine')\n\n# --- Remove ---\n[Environment]::SetEnvironmentVariable('MY_VAR', $null, 'User')\n\n# --- CMD ---\n# set MY_VAR=hello          (session)\n# setx MY_VAR hello          (user, persistent)\n# setx MY_VAR hello /M       (machine, persistent)",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sys-windows-features",
+      "title": "Windows Features & Optional Features",
+      "category": "Sysadmin",
+      "tags": [
+        "features",
+        "dism",
+        "powershell",
+        "windows",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Enable/disable Windows features and optional components.",
+      "code": "# --- List all features ---\nGet-WindowsOptionalFeature -Online | Sort FeatureName\n\n# --- Check specific feature ---\nGet-WindowsOptionalFeature -Online -FeatureName \"Microsoft-Hyper-V-All\"\n\n# --- Enable ---\nEnable-WindowsOptionalFeature -Online -FeatureName \"Microsoft-Hyper-V-All\" -All -NoRestart\n\n# --- Disable ---\nDisable-WindowsOptionalFeature -Online -FeatureName \"Microsoft-Hyper-V-All\" -NoRestart\n\n# --- DISM equivalents ---\n# dism /online /get-features | findstr /i \"hyper\"\n# dism /online /enable-feature /featurename:Microsoft-Hyper-V-All /all /norestart\n# dism /online /disable-feature /featurename:Microsoft-Hyper-V-All /norestart\n\n# Common features:\n# Microsoft-Hyper-V-All, NetFx3 (.NET 3.5),\n# TelnetClient, TFTP, Microsoft-Windows-Subsystem-Linux",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "remote-pssession",
+      "title": "Remote PowerShell Session",
+      "category": "Remote Admin",
+      "tags": [
+        "powershell",
+        "remote",
+        "winrm",
+        "psremoting",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Connect and run commands on remote machines.",
+      "code": "# --- Interactive session ---\nEnter-PSSession -ComputerName PC-NAME\n\n# --- Run command remotely ---\nInvoke-Command -ComputerName PC-NAME -ScriptBlock {\n    Get-Service | Where Status -eq Running\n}\n\n# --- Multiple machines ---\n$pcs = @('PC-001','PC-002','PC-003')\nInvoke-Command -ComputerName $pcs -ScriptBlock { hostname }\n\n# --- With credentials ---\n$cred = Get-Credential\nEnter-PSSession -ComputerName PC-NAME -Credential $cred\n\n# --- Enable remoting (on target) ---\nEnable-PSRemoting -Force\nSet-Item WSMan:\\localhost\\Client\\TrustedHosts -Value \"*\" -Force\n\n# --- Copy files to remote ---\nCopy-Item -Path \"C:\\local\\file.txt\" -Destination \"C:\\remote\\\" -ToSession (New-PSSession -ComputerName PC-NAME)",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "remote-gpupdate",
+      "title": "Group Policy Refresh",
+      "category": "Remote Admin",
+      "tags": [
+        "gpo",
+        "group-policy",
+        "remote",
+        "cmd",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Force Group Policy refresh locally or remotely.",
+      "code": ":: Local\ngpupdate /force\n\n:: Remote (PowerShell)\nInvoke-GPUpdate -Computer \"PC-NAME\" -Force -RandomDelayInMinutes 0\n\n:: Remote (PsExec)\npsexec \\\\PC-NAME gpupdate /force\n\n:: Check applied GPOs\ngpresult /r\ngpresult /h \"C:\\Logs\\gpreport.html\"\n\n:: Remote GP result\ngpresult /s PC-NAME /r\ngpresult /s PC-NAME /h \"C:\\Logs\\remote-gp.html\"",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "remote-rdp",
+      "title": "Remote Desktop (RDP) Management",
+      "category": "Remote Admin",
+      "tags": [
+        "rdp",
+        "remote",
+        "desktop",
+        "registry",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Enable/disable RDP, manage connections.",
+      "code": "# --- Enable RDP ---\nSet-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -Name 'fDenyTSConnections' -Value 0\nEnable-NetFirewallRule -DisplayGroup 'Remote Desktop'\n\n# --- Disable RDP ---\nSet-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -Name 'fDenyTSConnections' -Value 1\n\n# --- Check who's logged on ---\nquery user /server:PC-NAME\nqwinsta /server:PC-NAME\n\n# --- Disconnect user ---\nlogoff SESSION_ID /server:PC-NAME\n\n# --- Shadow/view session ---\nmstsc /shadow:SESSION_ID /v:PC-NAME /control\n\n# --- Connect via CMD ---\nmstsc /v:PC-NAME /w:1920 /h:1080",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-chrome",
+      "title": "Chrome \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "chrome",
+        "silent",
+        "install",
+        "msi",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install and uninstall for Google Chrome.",
+      "code": ":: Install (MSI)\nmsiexec /i GoogleChromeStandaloneEnterprise64.msi /qn /norestart\n\n:: Install (EXE - enterprise)\nChromeSetup.exe /silent /install\n\n:: Uninstall\nmsiexec /x {ProductGUID} /qn /norestart\n:: Or find GUID:\n:: wmic product where \"name like 'Google Chrome'\" get IdentifyingNumber\n\n:: Disable auto-update (registry)\nreg add \"HKLM\\SOFTWARE\\Policies\\Google\\Update\" /v UpdateDefault /t REG_DWORD /d 0 /f",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-firefox",
+      "title": "Firefox \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "firefox",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for Mozilla Firefox.",
+      "code": ":: MSI install\nmsiexec /i \"Firefox Setup 125.0.msi\" /qn /norestart\n\n:: EXE install\n\"Firefox Setup 125.0.exe\" /S\n\n:: Uninstall\n\"C:\\Program Files\\Mozilla Firefox\\uninstall\\helper.exe\" /S\n\n:: With config (create ini file)\n:: [Install]\n:: InstallDirectoryPath=C:\\Program Files\\Mozilla Firefox\n:: QuickLaunchShortcut=false\n:: DesktopShortcut=false\n:: Then: Firefox Setup.exe /INI=config.ini",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-adobe",
+      "title": "Adobe Acrobat Reader \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "adobe",
+        "acrobat",
+        "reader",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for Adobe Acrobat Reader DC.",
+      "code": ":: EXE install (bootstrap)\nAcroRdrDC_en_US.exe /sAll /msi /norestart /quiet EULA_ACCEPT=YES\n\n:: MSI install\nmsiexec /i AcroRead.msi /qn /norestart EULA_ACCEPT=YES\n\n:: Disable update\nreg add \"HKLM\\SOFTWARE\\Policies\\Adobe\\Acrobat Reader\\DC\\FeatureLockDown\" /v bUpdater /t REG_DWORD /d 0 /f\n\n:: Uninstall\nmsiexec /x {AC76BA86-7AD7-1033-7B44-AC0F074E4100} /qn",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-7zip",
+      "title": "7-Zip \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "7zip",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for 7-Zip.",
+      "code": ":: EXE install\n7z2301-x64.exe /S\n\n:: MSI install\nmsiexec /i 7z2301-x64.msi /qn /norestart\n\n:: Uninstall\nmsiexec /x {23170F69-40C1-2702-2301-000001000000} /qn\n:: Or: \"C:\\Program Files\\7-Zip\\Uninstall.exe\" /S",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-vlc",
+      "title": "VLC \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "vlc",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for VLC Media Player.",
+      "code": ":: EXE install\nvlc-3.0.20-win64.exe /S /L=1033\n\n:: With no desktop shortcut\nvlc-3.0.20-win64.exe /S /L=1033 /NCRC\n\n:: Uninstall\n\"C:\\Program Files\\VideoLAN\\VLC\\uninstall.exe\" /S",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-zoom",
+      "title": "Zoom \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "zoom",
+        "silent",
+        "install",
+        "msi",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for Zoom Client.",
+      "code": ":: MSI install\nmsiexec /i ZoomInstallerFull.msi /qn /norestart ZoomAutoUpdate=True\n\n:: MSI with custom config\nmsiexec /i ZoomInstallerFull.msi /qn /norestart ZNoDesktopShortCut=true ZoomAutoUpdate=false\n\n:: EXE install\nZoomInstaller.exe /silent /install\n\n:: Uninstall\nmsiexec /x {ProductGUID} /qn /norestart\n\n:: Per-machine install (vs per-user default)\nmsiexec /i ZoomInstallerFull.msi /qn ZoomAutoUpdate=true ZRecommend=\"AudioAutoAdjust=1\"",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-notepadpp",
+      "title": "Notepad++ \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "notepad++",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for Notepad++.",
+      "code": ":: EXE install\nnpp.8.6.Installer.x64.exe /S\n\n:: Uninstall\n\"C:\\Program Files\\Notepad++\\uninstall.exe\" /S",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-vscode",
+      "title": "VS Code \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "vscode",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for Visual Studio Code.",
+      "code": ":: System-wide install\nVSCodeSetup-x64.exe /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,addtopath\n\n:: Uninstall\n\"C:\\Program Files\\Microsoft VS Code\\unins000.exe\" /VERYSILENT /NORESTART",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-java",
+      "title": "Java Runtime \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "java",
+        "jre",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for Java Runtime Environment.",
+      "code": ":: Online installer\njre-8uXXX-windows-x64.exe /s\n\n:: MSI (extracted)\nmsiexec /i jre1.8.0_XXX.msi /qn /norestart JU=0 JAVAUPDATE=0 AUTOUPDATECHECK=0\n\n:: Disable auto-update\nreg add \"HKLM\\SOFTWARE\\JavaSoft\\Java Update\\Policy\" /v EnableJavaUpdate /t REG_DWORD /d 0 /f",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-dotnet",
+      "title": ".NET Runtime \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "dotnet",
+        "runtime",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for .NET Desktop Runtime and ASP.NET.",
+      "code": ":: .NET Desktop Runtime\nwindowsdesktop-runtime-8.0.x-win-x64.exe /install /quiet /norestart\n\n:: ASP.NET Core Runtime\naspnetcore-runtime-8.0.x-win-x64.exe /install /quiet /norestart\n\n:: .NET Framework 3.5 (Windows feature)\nDism /online /enable-feature /featurename:NetFx3 /all /norestart\n\n:: Check installed versions\ndotnet --list-runtimes\nreg query \"HKLM\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\" /s",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-python",
+      "title": "Python \u2014 Silent Install",
+      "category": "Silent Installs",
+      "tags": [
+        "python",
+        "silent",
+        "install",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Silent install for Python with PATH and pip.",
+      "code": ":: Install with all options\npython-3.12.x-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 Include_pip=1 Include_test=0\n\n:: Uninstall\npython-3.12.x-amd64.exe /uninstall /quiet\n\n:: Verify\npython --version\npip --version",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "silent-msi-patterns",
+      "title": "MSI Silent Install Patterns",
+      "category": "Silent Installs",
+      "tags": [
+        "msi",
+        "silent",
+        "install",
+        "patterns",
+        "cheatsheet"
+      ],
+      "language": "cmd",
+      "description": "Universal MSI install patterns and logging.",
+      "code": ":: Standard silent install\nmsiexec /i installer.msi /qn /norestart\n\n:: With log\nmsiexec /i installer.msi /qn /norestart /l*v \"C:\\Logs\\install.log\"\n\n:: Uninstall by GUID\nmsiexec /x {PRODUCT-GUID} /qn /norestart\n\n:: Find GUID of installed app\nGet-WmiObject Win32_Product | Where { $_.Name -match \"AppName\" } | Select Name,IdentifyingNumber\n:: Or (faster):\nGet-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* |\n    Where DisplayName -match 'AppName' | Select DisplayName,PSChildName\n\n:: Extract MSI from EXE\n:: app.exe /extract:C:\\temp\\extracted\n:: Or 7-Zip: 7z x app.exe -oC:\\temp\\extracted\n\n:: Repair\nmsiexec /fa {PRODUCT-GUID}\n\n:: FLAGS:\n:: /qn = fully silent   /qb = basic UI   /qr = reduced UI\n:: /norestart = no reboot   /forcerestart = force reboot\n:: /l*v = verbose log",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-ports",
+      "title": "Common Port Numbers",
+      "category": "Cheat Sheets",
+      "tags": [
+        "ports",
+        "network",
+        "reference",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Quick reference for common TCP/UDP ports.",
+      "code": "PORT    SERVICE              NOTES\n20/21   FTP                  File transfer (data/control)\n22      SSH                  Secure shell\n23      Telnet               Unencrypted remote (avoid)\n25      SMTP                 Email sending\n53      DNS                  Domain resolution (TCP+UDP)\n67/68   DHCP                 IP assignment (server/client)\n80      HTTP                 Web traffic\n88      Kerberos             AD authentication\n110     POP3                 Email retrieval\n135     RPC                  Windows RPC endpoint mapper\n137-139 NetBIOS              Legacy Windows networking\n143     IMAP                 Email retrieval\n389     LDAP                 AD directory queries\n443     HTTPS                Encrypted web\n445     SMB                  File sharing, printers\n464     Kerberos             Password change\n587     SMTP                 Email submission (modern)\n636     LDAPS                Encrypted LDAP\n993     IMAPS                Encrypted IMAP\n995     POP3S                Encrypted POP3\n1688    KMS                  Volume activation\n3268    Global Catalog       AD GC queries\n3389    RDP                  Remote Desktop\n5060    SIP                  VoIP signaling\n5985    WinRM HTTP           PowerShell remoting\n5986    WinRM HTTPS          PS remoting (encrypted)\n8080    HTTP Alt             Common dev/proxy port\n8443    HTTPS Alt            Common alt HTTPS",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-run-dialog",
+      "title": "Run Dialog Shortcuts (Win+R)",
+      "category": "Cheat Sheets",
+      "tags": [
+        "run",
+        "shortcuts",
+        "mmc",
+        "windows",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Every useful Win+R shortcut for sysadmins.",
+      "code": "SYSTEM\nmsconfig          System Configuration\nmsinfo32          System Information\nwinver            Windows version\ndxdiag            DirectX Diagnostics\ntaskmgr           Task Manager\nresmon            Resource Monitor\nperfmon           Performance Monitor\nregedit           Registry Editor\ncontrol           Control Panel\nsysdm.cpl         System Properties\n\nDISK & STORAGE\ndiskmgmt.msc      Disk Management\ndevmgmt.msc       Device Manager\ncleanmgr          Disk Cleanup\ndfrgui            Defragment & Optimize\n\nNETWORK\nncpa.cpl          Network Connections\nfirewall.cpl      Windows Firewall\ninetcpl.cpl       Internet Properties\n\nUSERS & SECURITY\nlusrmgr.msc       Local Users & Groups\nsecpol.msc        Local Security Policy\ngpedit.msc        Group Policy Editor\ncertmgr.msc       Certificate Manager\ncompmgmt.msc      Computer Management\n\nSERVICES & APPS\nservices.msc      Services\nappwiz.cpl        Programs & Features\noptionalfeatures  Windows Features\ntaskschd.msc      Task Scheduler\neventvwr.msc      Event Viewer\nprintmanagement.msc  Print Management\n\nOTHER\nmstsc             Remote Desktop Client\nsnippingtool      Snipping Tool\ncalc              Calculator\nnotepad           Notepad\ncmd               Command Prompt\npowershell        PowerShell\nwt                Windows Terminal\nshell:startup     Startup folder\nshell:sendto      SendTo folder",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-registry-hives",
+      "title": "Registry Hive Map",
+      "category": "Cheat Sheets",
+      "tags": [
+        "registry",
+        "hives",
+        "reference",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "What lives where in the Windows Registry.",
+      "code": "HKEY_LOCAL_MACHINE (HKLM)\n  \\SOFTWARE         App settings (machine-wide)\n  \\SYSTEM           Hardware, drivers, boot config\n  \\SECURITY         Security policies (restricted)\n  \\SAM              User account database (restricted)\n  \\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\n    \\Uninstall      Installed programs (64-bit)\n    \\Run            Startup programs (all users)\n  \\SOFTWARE\\WOW6432Node\n    \\...\\Uninstall  Installed programs (32-bit on 64-bit OS)\n\nHKEY_CURRENT_USER (HKCU)\n  \\SOFTWARE         App settings (current user)\n  \\Environment      User environment variables\n  \\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\n    \\Run            Startup programs (current user)\n    \\Explorer       Shell/UI settings\n\nHKEY_CLASSES_ROOT (HKCR)\n  Merged view of HKLM\\SOFTWARE\\Classes + HKCU\\SOFTWARE\\Classes\n  File associations, COM objects\n\nHKEY_USERS (HKU)\n  \\.DEFAULT         Default profile template\n  \\S-1-5-18         SYSTEM account\n  \\S-1-5-19         LOCAL SERVICE\n  \\S-1-5-20         NETWORK SERVICE\n  \\S-1-5-21-...     User SIDs\n\nHKEY_CURRENT_CONFIG (HKCC)\n  Current hardware profile (rarely used)",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-gpo-order",
+      "title": "GPO Processing Order",
+      "category": "Cheat Sheets",
+      "tags": [
+        "gpo",
+        "group-policy",
+        "order",
+        "reference",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Group Policy processing order and precedence.",
+      "code": "PROCESSING ORDER (LSDOU):\n  1. Local Policy (gpedit.msc)\n  2. Site GPOs\n  3. Domain GPOs\n  4. OU GPOs (parent > child > grandchild)\n\nLast applied WINS (higher number = higher priority)\nExceptions:\n  - Enforced GPOs override child blocks\n  - Block Inheritance stops parent GPOs\n  - WMI filters can conditionally apply\n\nREFRESH INTERVALS:\n  - Computer: every 90 min (+/- 30 min random)\n  - DC: every 5 min\n  - Security: every 16 hours\n  - Force: gpupdate /force\n\nTROUBLESHOOT:\n  gpresult /r              See applied GPOs\n  gpresult /h report.html  HTML report\n  rsop.msc                 Resultant Set of Policy",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-dns-records",
+      "title": "DNS Record Types",
+      "category": "Cheat Sheets",
+      "tags": [
+        "dns",
+        "records",
+        "reference",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Common DNS record types and what they do.",
+      "code": "TYPE   PURPOSE                EXAMPLE\nA      IPv4 address           example.com > 93.184.216.34\nAAAA   IPv6 address           example.com > 2606:2800:220:1:...\nCNAME  Alias to another name  www > example.com\nMX     Mail server            example.com > mail.example.com (pri 10)\nTXT    Text data              SPF, DKIM, DMARC, domain verification\nSRV    Service location       _sip._tcp.example.com > sipserver:5060\nNS     Name server            example.com > ns1.provider.com\nPTR    Reverse lookup         34.216.184.93 > example.com\nSOA    Start of authority     Zone info, serial, refresh times\nCAA    Certificate authority  Which CAs can issue certs for domain\n\nCOMMON QUERIES:\n  nslookup -type=A example.com\n  nslookup -type=MX example.com\n  nslookup -type=TXT example.com\n  Resolve-DnsName example.com -Type MX",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-http-codes",
+      "title": "HTTP Status Codes",
+      "category": "Cheat Sheets",
+      "tags": [
+        "http",
+        "status",
+        "codes",
+        "web",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "HTTP status codes quick reference.",
+      "code": "1xx INFORMATIONAL\n100 Continue\n101 Switching Protocols\n\n2xx SUCCESS\n200 OK\n201 Created\n204 No Content\n\n3xx REDIRECTION\n301 Moved Permanently\n302 Found (temporary redirect)\n304 Not Modified (cached)\n307 Temporary Redirect\n308 Permanent Redirect\n\n4xx CLIENT ERROR\n400 Bad Request\n401 Unauthorized (need auth)\n403 Forbidden (auth won't help)\n404 Not Found\n405 Method Not Allowed\n408 Request Timeout\n409 Conflict\n429 Too Many Requests\n\n5xx SERVER ERROR\n500 Internal Server Error\n502 Bad Gateway\n503 Service Unavailable\n504 Gateway Timeout",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-ps-operators",
+      "title": "PowerShell Comparison Operators",
+      "category": "Cheat Sheets",
+      "tags": [
+        "powershell",
+        "operators",
+        "comparison",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "All PowerShell comparison and logical operators.",
+      "code": "COMPARISON\n-eq        Equal                'a' -eq 'A'     True (case-insensitive)\n-ceq       Equal (case-sens)    'a' -ceq 'A'    False\n-ne        Not equal\n-gt        Greater than         5 -gt 3          True\n-ge        Greater or equal\n-lt        Less than\n-le        Less or equal\n\nMATCHING\n-like      Wildcard match       'hello' -like 'h*'      True\n-notlike   Not wildcard\n-match     Regex match          'abc123' -match '\\d+'   True\n-notmatch  Not regex\n-contains  Collection contains  @(1,2,3) -contains 2    True\n-in        Value in collection  2 -in @(1,2,3)          True\n\nLOGICAL\n-and       And                  ($a -gt 0) -and ($b -gt 0)\n-or        Or\n-not / !   Not                  -not $false\n-xor       Exclusive or\n\nTYPE\n-is        Type check           'hello' -is [string]     True\n-as        Type conversion      '42' -as [int]           42",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-env-variables",
+      "title": "Windows Environment Variables",
+      "category": "Cheat Sheets",
+      "tags": [
+        "environment",
+        "variables",
+        "paths",
+        "windows",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Common Windows environment variables and their paths.",
+      "code": "VARIABLE                  TYPICAL PATH\n%USERPROFILE%             C:\\Users\\username\n%APPDATA%                 C:\\Users\\username\\AppData\\Roaming\n%LOCALAPPDATA%            C:\\Users\\username\\AppData\\Local\n%TEMP% / %TMP%            C:\\Users\\username\\AppData\\Local\\Temp\n%HOMEPATH%                \\Users\\username\n%HOMEDRIVE%               C:\n%USERNAME%                username\n%COMPUTERNAME%            PC-NAME\n%USERDOMAIN%              DOMAIN\n\n%SYSTEMROOT% / %WINDIR%   C:\\Windows\n%SYSTEMDRIVE%             C:\n%PROGRAMFILES%            C:\\Program Files\n%PROGRAMFILES(X86)%       C:\\Program Files (x86)\n%PROGRAMDATA%             C:\\ProgramData\n%COMMONPROGRAMFILES%      C:\\Program Files\\Common Files\n%PUBLIC%                  C:\\Users\\Public\n\n%PATH%                    Semicolon-separated search dirs\n%PATHEXT%                 .COM;.EXE;.BAT;.CMD;.VBS;.JS;.PS1\n%COMSPEC%                 C:\\Windows\\System32\\cmd.exe\n%PSModulePath%            PowerShell module search paths",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-wmic",
+      "title": "WMIC Queries (System Info)",
+      "category": "Cheat Sheets",
+      "tags": [
+        "wmic",
+        "hardware",
+        "system",
+        "info",
+        "cheatsheet"
+      ],
+      "language": "cmd",
+      "description": "Quick hardware and system info via WMIC and PowerShell.",
+      "code": ":: Serial number\nwmic bios get serialnumber\nGet-CimInstance Win32_BIOS | Select SerialNumber\n\n:: Computer model\nwmic computersystem get model,manufacturer\nGet-CimInstance Win32_ComputerSystem | Select Model,Manufacturer\n\n:: RAM\nwmic memorychip get capacity,speed,manufacturer\nGet-CimInstance Win32_PhysicalMemory | Select Capacity,Speed,Manufacturer\n\n:: CPU\nwmic cpu get name,numberofcores,maxclockspeed\n\n:: Disk\nwmic diskdrive get model,size,mediatype\n\n:: OS info\nwmic os get caption,version,osarchitecture,installdate\n\n:: Monitor\nwmic desktopmonitor get caption,screenheight,screenwidth\n\n:: MAC address\nwmic nic where \"NetEnabled=True\" get name,macaddress\n\n:: All at once (PowerShell)\nGet-ComputerInfo | Select CsName,OsName,OsVersion,CsModel,CsManufacturer,BiosSeralNumber",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-regex",
+      "title": "Regex Patterns Quick Reference",
+      "category": "Cheat Sheets",
+      "tags": [
+        "regex",
+        "patterns",
+        "reference",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Common regex patterns for PowerShell and general use.",
+      "code": "BASICS\n.          Any character (except newline)\n\\d         Digit [0-9]\n\\D         Non-digit\n\\w         Word char [a-zA-Z0-9_]\n\\W         Non-word\n\\s         Whitespace\n\\S         Non-whitespace\n^          Start of string\n$          End of string\n\\b         Word boundary\n\nQUANTIFIERS\n*          Zero or more\n+          One or more\n?          Zero or one\n{3}        Exactly 3\n{3,}       3 or more\n{3,5}      Between 3 and 5\n\nGROUPS & ALTERNATION\n(abc)      Capture group\n(?:abc)    Non-capture group\na|b        a or b\n[abc]      Character class (a, b, or c)\n[^abc]     NOT a, b, or c\n[a-z]      Range\n\nCOMMON PATTERNS\nIP:     \\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b\nEmail:  [\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}\nMAC:    ([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\nGUID:   [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\nPath:   [A-Z]:\\\\[^\\\\/:*?\"<>|]+",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "cheat-bsod",
+      "title": "Common BSOD Stop Codes",
+      "category": "Cheat Sheets",
+      "tags": [
+        "bsod",
+        "bluescreen",
+        "errors",
+        "troubleshooting",
+        "cheatsheet"
+      ],
+      "language": "plaintext",
+      "description": "Blue Screen stop codes with plain-English meanings.",
+      "code": "CODE                              LIKELY CAUSE\nIRQL_NOT_LESS_OR_EQUAL            Bad driver, RAM issue\nSYSTEM_SERVICE_EXCEPTION          Driver or system file corruption\nKERNEL_DATA_INPAGE_ERROR          Failing hard drive or bad RAM\nPAGE_FAULT_IN_NONPAGED_AREA       Bad RAM, corrupt driver\nCRITICAL_PROCESS_DIED             Essential process crashed\nSYSTEM_THREAD_EXCEPTION           Incompatible driver\nDPC_WATCHDOG_VIOLATION            Driver taking too long (SSD/NVMe)\nWHEA_UNCORRECTABLE_ERROR          Hardware failure (CPU/RAM/MB)\nVIDEO_TDR_FAILURE                 GPU driver crash\nBAD_POOL_HEADER                   Bad driver or antivirus conflict\nINACCESSIBLE_BOOT_DEVICE          Boot drive not found, driver issue\nUNMOUNTABLE_BOOT_VOLUME           Corrupted boot partition\nKMODE_EXCEPTION_NOT_HANDLED       Driver crash in kernel mode\n\nDIAGNOSTIC STEPS:\n1. Note the stop code and .sys file if shown\n2. Boot Safe Mode > update/roll back driver\n3. sfc /scannow + DISM /RestoreHealth\n4. Run memtest86 for RAM\n5. Check Event Viewer > System for errors\n6. Check disk: chkdsk C: /r",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "flow-no-boot",
+      "title": "PC Won't Boot \u2014 Troubleshooting Flow",
+      "category": "Troubleshooting",
+      "tags": [
+        "boot",
+        "troubleshooting",
+        "flow",
+        "hardware"
+      ],
+      "language": "plaintext",
+      "description": "Step-by-step when a PC won't boot.",
+      "code": "1. NO POWER AT ALL?\n   > Check power cable, outlet, power strip\n   > Check PSU switch on back\n   > Try different outlet\n   > If laptop: remove battery, hold power 30s, reconnect\n\n2. POWERS ON BUT NO DISPLAY?\n   > Monitor connected? Right input?\n   > Try different cable / port\n   > Listen for beep codes\n   > Remove RAM, reseat, try one stick at a time\n   > Try onboard graphics (remove GPU)\n\n3. GETS TO BIOS BUT NO OS?\n   > Check boot order (F2/F12/DEL at startup)\n   > Boot drive detected? Check SATA/NVMe connection\n   > Try bootrec:\n     bootrec /fixmbr\n     bootrec /fixboot\n     bootrec /rebuildbcd\n\n4. WINDOWS LOGO THEN CRASH?\n   > Boot Safe Mode (hold Shift + click Restart)\n   > Last Known Good Configuration\n   > sfc /scannow from recovery\n   > System Restore\n   > If bitlockered: have recovery key ready\n\n5. BOOT LOOP?\n   > Safe Mode > uninstall recent update/driver\n   > Recovery > Reset this PC (keep files)\n   > Clean install from USB as last resort",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "flow-slow-pc",
+      "title": "Slow PC Checklist",
+      "category": "Troubleshooting",
+      "tags": [
+        "slow",
+        "performance",
+        "troubleshooting",
+        "flow"
+      ],
+      "language": "plaintext",
+      "description": "Systematic approach to diagnosing a slow PC.",
+      "code": "1. QUICK WINS\n   [ ] Reboot (uptime > 7 days? reboot first)\n   [ ] Check Task Manager > Startup tab (disable junk)\n   [ ] Close browser tabs (each tab = RAM)\n   [ ] Check disk space (< 10% free = problems)\n\n2. TASK MANAGER DIAGNOSTICS\n   [ ] CPU pegged at 100%? > Sort by CPU, find the hog\n   [ ] RAM maxed out? > Close apps or add RAM\n   [ ] Disk at 100%? > Often Windows Update, antivirus, or failing drive\n   [ ] Check for cryptominers or unknown processes\n\n3. STORAGE\n   [ ] Run Disk Cleanup (cleanmgr)\n   [ ] Clear temp files: %TEMP%, C:\\Windows\\Temp\n   [ ] Uninstall unused programs\n   [ ] Is it HDD? SSD upgrade = biggest speed gain\n   [ ] Check drive health: wmic diskdrive get status\n\n4. MALWARE CHECK\n   [ ] Windows Security full scan\n   [ ] Check browser extensions\n   [ ] Check Add/Remove Programs for suspicious entries\n\n5. SYSTEM HEALTH\n   [ ] sfc /scannow + DISM /RestoreHealth\n   [ ] Windows Update current?\n   [ ] Drivers current? (especially GPU)\n   [ ] Check Event Viewer for recurring errors\n\n6. STILL SLOW?\n   [ ] memtest86 for RAM issues\n   [ ] CrystalDiskInfo for drive health\n   [ ] Consider clean install",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "flow-no-network",
+      "title": "Can't Connect to Network",
+      "category": "Troubleshooting",
+      "tags": [
+        "network",
+        "troubleshooting",
+        "connectivity",
+        "flow"
+      ],
+      "language": "plaintext",
+      "description": "Network connectivity troubleshooting flow.",
+      "code": "1. PHYSICAL LAYER\n   [ ] Ethernet cable plugged in? Try different cable/port\n   [ ] Wi-Fi enabled? Airplane mode off?\n   [ ] NIC showing in Device Manager? Yellow triangle?\n   [ ] Link light on NIC / switch port?\n\n2. IP CONFIGURATION\n   [ ] ipconfig /all \u2014 do you have an IP?\n   [ ] 169.254.x.x = APIPA = no DHCP response\n   [ ] Fix: ipconfig /release & /renew\n   [ ] Static IP conflict? Check for duplicates\n\n3. LOCAL CONNECTIVITY\n   [ ] ping 127.0.0.1 (loopback \u2014 TCP/IP stack)\n   [ ] ping your gateway (ipconfig > Default Gateway)\n   [ ] If gateway fails: Layer 2 issue (VLAN, switch, cable)\n\n4. DNS RESOLUTION\n   [ ] ping 8.8.8.8 \u2014 works? Then it's DNS\n   [ ] nslookup google.com \u2014 fails? DNS issue\n   [ ] Fix: ipconfig /flushdns\n   [ ] Try manual DNS: 8.8.8.8 or 1.1.1.1\n\n5. CAN PING BUT CAN'T BROWSE\n   [ ] Proxy settings? (check IE/Windows proxy)\n   [ ] Firewall blocking? Try disabling temporarily\n   [ ] Check hosts file: C:\\Windows\\System32\\drivers\\etc\\hosts\n   [ ] Reset: netsh winsock reset + netsh int ip reset\n\n6. NUCLEAR OPTION\n   [ ] Full network stack reset (see wiki entry)\n   [ ] Uninstall/reinstall NIC driver\n   [ ] Reboot",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "flow-printer",
+      "title": "Printer Not Working",
+      "category": "Troubleshooting",
+      "tags": [
+        "printer",
+        "spooler",
+        "troubleshooting",
+        "flow"
+      ],
+      "language": "plaintext",
+      "description": "Printer troubleshooting flow.",
+      "code": "1. BASICS\n   [ ] Printer powered on? Paper loaded? No jams?\n   [ ] Is it the default printer?\n   [ ] USB: try different port. Network: ping printer IP\n\n2. SPOOLER FIX (fixes 80% of issues)\n   [ ] Stop-Service Spooler -Force\n   [ ] Delete: C:\\Windows\\System32\\spool\\PRINTERS\\*\n   [ ] Start-Service Spooler\n\n3. DRIVER ISSUES\n   [ ] Remove printer > reinstall\n   [ ] Download latest driver from manufacturer\n   [ ] Try \"Microsoft Print to PDF\" to test if it's the driver\n\n4. NETWORK PRINTER\n   [ ] Can you reach it? ping PRINTER-IP\n   [ ] Web interface working? http://PRINTER-IP\n   [ ] Re-add: Add-Printer -ConnectionName \"\\\\server\\printer\"\n   [ ] Check firewall: ports 9100 (raw), 631 (IPP)\n\n5. STUCK PRINT JOB\n   [ ] Get-PrintJob -PrinterName \"Name\" | Remove-PrintJob\n   [ ] Or: Cancel All Documents in print queue\n   [ ] Then spooler restart",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "flow-win-update-stuck",
+      "title": "Windows Update Stuck",
+      "category": "Troubleshooting",
+      "tags": [
+        "windows-update",
+        "stuck",
+        "troubleshooting",
+        "flow"
+      ],
+      "language": "cmd",
+      "description": "When Windows Update is stuck or failing.",
+      "code": ":: Step 1: Stop update services\nnet stop wuauserv\nnet stop bits\nnet stop cryptsvc\nnet stop msiserver\n\n:: Step 2: Rename update cache\nren C:\\Windows\\SoftwareDistribution SoftwareDistribution.bak\nren C:\\Windows\\System32\\catroot2 catroot2.bak\n\n:: Step 3: Restart services\nnet start wuauserv\nnet start bits\nnet start cryptsvc\nnet start msiserver\n\n:: Step 4: Try update again\n:: Settings > Windows Update > Check for updates\n\n:: Step 5: If still stuck, repair\nDISM /Online /Cleanup-Image /RestoreHealth\nsfc /scannow\n\n:: Step 6: Manual update\n:: Go to catalog.update.microsoft.com\n:: Search for KB number\n:: Download and install manually\n\n:: Check update logs:\n:: Get-WindowsUpdateLog (generates readable log on desktop)",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "flow-profile-corrupt",
+      "title": "User Profile Corruption Recovery",
+      "category": "Troubleshooting",
+      "tags": [
+        "profile",
+        "corruption",
+        "registry",
+        "troubleshooting",
+        "flow"
+      ],
+      "language": "powershell",
+      "description": "When a user gets a temp profile or can't log in.",
+      "code": "# Symptoms: \"Temporary Profile\" warning, missing desktop/files\n\n# Step 1: Identify the SID\nGet-WmiObject Win32_UserProfile | Select LocalPath, SID, Special | Where { -not $_.Special }\n\n# Step 2: Check registry\n# HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\n# Look for the user's SID \u2014 there may be a .bak version\n\n# Step 3: Fix in registry\n# If SID exists WITH .bak:\n#   - Rename the non-.bak to .bak2\n#   - Rename the .bak to remove .bak\n#   - Set RefCount to 0\n#   - Set State to 0\n#   - Reboot\n\n# Step 4: If profile is truly corrupt\n# - Log in as a different admin\n# - Copy data from C:\\Users\\CorruptedUser\n# - Delete the profile:\nGet-CimInstance Win32_UserProfile | Where LocalPath -match 'CorruptedUser' | Remove-CimInstance\n# - User logs in again > fresh profile\n# - Restore data from backup",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "ps-errorhandling",
+      "title": "PowerShell Error Handling",
+      "category": "PowerShell",
+      "tags": [
+        "powershell",
+        "errors",
+        "try-catch",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Proper error handling patterns for scripts.",
+      "code": "# --- Basic try/catch ---\ntry {\n    Get-Item \"C:\\nonexistent\" -ErrorAction Stop\n} catch {\n    Write-Host \"Error: $($_.Exception.Message)\" -ForegroundColor Red\n} finally {\n    Write-Host \"Cleanup code runs regardless\"\n}\n\n# --- ErrorAction values ---\n# Stop       = throw terminating error (for try/catch)\n# Continue   = show error, keep going (default)\n# SilentlyContinue = hide error, keep going\n# Inquire    = ask user\n\n# --- $ErrorActionPreference (script-wide) ---\n$ErrorActionPreference = 'Stop'  # Make all errors catchable\n\n# --- Log errors ---\ntry {\n    # risky code\n} catch {\n    $_ | Out-File \"C:\\Logs\\errors.log\" -Append\n    throw  # re-throw to caller\n}\n\n# --- Check last exit code (for native commands) ---\ncmd /c \"exit 1\"\nif ($LASTEXITCODE -ne 0) { Write-Host \"Command failed with code $LASTEXITCODE\" }",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "ps-files",
+      "title": "File Operations Cookbook",
+      "category": "PowerShell",
+      "tags": [
+        "powershell",
+        "files",
+        "copy",
+        "move",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Common file operations: copy, move, find, hash, download.",
+      "code": "# --- Copy ---\nCopy-Item -Path \"C:\\source\\*\" -Destination \"C:\\dest\\\" -Recurse\nCopy-Item -Path \"C:\\file.txt\" -Destination \"\\\\server\\share\\\"\n\n# --- Move ---\nMove-Item -Path \"C:\\old\\*\" -Destination \"C:\\new\\\"\n\n# --- Rename (bulk) ---\nGet-ChildItem \"C:\\Photos\\*.jpg\" | Rename-Item -NewName { $_.Name -replace 'IMG_','Photo_' }\n\n# --- Find files ---\nGet-ChildItem -Path C:\\ -Recurse -Filter \"*.log\" -EA SilentlyContinue\nGet-ChildItem -Path C:\\ -Recurse | Where { $_.LastWriteTime -gt (Get-Date).AddDays(-1) }\n\n# --- File hash ---\nGet-FileHash -Path \"C:\\file.exe\" -Algorithm SHA256\n\n# --- Download ---\nInvoke-WebRequest -Uri \"https://example.com/file.zip\" -OutFile \"C:\\Downloads\\file.zip\"\n# Or with BITS (resumable):\nStart-BitsTransfer -Source \"https://example.com/file.zip\" -Destination \"C:\\Downloads\\file.zip\"\n\n# --- Read/Write ---\nGet-Content \"C:\\file.txt\"\nGet-Content \"C:\\file.txt\" -Tail 20   # Last 20 lines\n\"Hello World\" | Out-File \"C:\\file.txt\"\n\"Append this\" | Add-Content \"C:\\file.txt\"",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "ps-csv-json",
+      "title": "CSV & JSON Processing",
+      "category": "PowerShell",
+      "tags": [
+        "powershell",
+        "csv",
+        "json",
+        "data",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Import, export, and manipulate CSV and JSON data.",
+      "code": "# --- CSV ---\n$data = Import-Csv \"C:\\data.csv\"\n$data | Where Department -eq 'IT' | Select Name, Email\n$data | Export-Csv \"C:\\filtered.csv\" -NoTypeInformation\n\n# Create CSV from scratch\n$objects = @(\n    [PSCustomObject]@{Name='PC-001'; Status='Online'}\n    [PSCustomObject]@{Name='PC-002'; Status='Offline'}\n)\n$objects | Export-Csv \"C:\\inventory.csv\" -NoTypeInformation\n\n# --- JSON ---\n$json = Get-Content \"C:\\config.json\" | ConvertFrom-Json\n$json.setting1\n$json | ConvertTo-Json -Depth 5 | Out-File \"C:\\config.json\"\n\n# Create JSON\n$config = @{ server = 'prod'; port = 8080; features = @('auth','logging') }\n$config | ConvertTo-Json | Out-File \"C:\\config.json\"\n\n# API call > JSON\n$response = Invoke-RestMethod -Uri \"https://api.example.com/data\"\n$response | ConvertTo-Json",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "ps-transcript",
+      "title": "PowerShell Transcript Logging",
+      "category": "PowerShell",
+      "tags": [
+        "powershell",
+        "logging",
+        "transcript",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Auto-log everything a script does.",
+      "code": "# Start logging (drop at top of any script)\n$logFile = \"C:\\Logs\\$(Get-Date -Format 'yyyyMMdd_HHmmss')_script.log\"\nStart-Transcript -Path $logFile -Append\n\n# Your script code here...\nWrite-Host \"This gets logged\"\nGet-Service | Where Status -eq Running\n\n# Stop logging\nStop-Transcript\n\n# --- Auto-transcript in profile ---\n# Add to $PROFILE:\n# Start-Transcript -Path \"$env:USERPROFILE\\Documents\\PS_Logs\\$(Get-Date -f 'yyyyMMdd').log\" -Append",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "ps-credentials",
+      "title": "Credential Management",
+      "category": "PowerShell",
+      "tags": [
+        "powershell",
+        "credentials",
+        "security",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Securely handle credentials in scripts.",
+      "code": "# --- Interactive prompt ---\n$cred = Get-Credential\n\n# --- Store encrypted (current user only) ---\n$cred.Password | ConvertFrom-SecureString | Out-File \"C:\\cred.txt\"\n\n# --- Retrieve ---\n$password = Get-Content \"C:\\cred.txt\" | ConvertTo-SecureString\n$cred = New-Object PSCredential('DOMAIN\\user', $password)\n\n# --- Use ---\nInvoke-Command -ComputerName PC-001 -Credential $cred -ScriptBlock { hostname }\nEnter-PSSession -ComputerName PC-001 -Credential $cred\n\n# --- Windows Credential Manager ---\n# cmdkey /add:server /user:DOMAIN\\admin /pass:P@ssw0rd\n# cmdkey /list\n# cmdkey /delete:server\n\n# WARNING: Never hardcode passwords in scripts!",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "si-procmon",
+      "title": "Sysinternals: Process Monitor",
+      "category": "Sysinternals",
+      "tags": [
+        "sysinternals",
+        "procmon",
+        "monitoring",
+        "classic"
+      ],
+      "language": "plaintext",
+      "description": "Process Monitor filters and tips for troubleshooting.",
+      "code": "WHAT IT DOES:\n  Captures real-time file, registry, network, process activity.\n  Essential for finding WHY something fails.\n\nUSEFUL FILTERS (Ctrl+L):\n  Process Name is [app.exe]         Focus on one app\n  Operation is WriteFile             See what's being written\n  Result is ACCESS DENIED            Find permission issues\n  Path contains [keyword]            Track specific files/keys\n  Operation is RegSetValue            Registry writes only\n\nQUICK WORKFLOW:\n  1. Set filters BEFORE capturing (reduces noise)\n  2. Clear display (Ctrl+X)\n  3. Reproduce the problem\n  4. Stop capture (Ctrl+E)\n  5. Look for RED entries (errors)\n  6. Right-click > Properties for details\n\nTIPS:\n  - Use Process Tree (Ctrl+T) to see parent/child relationships\n  - Tools > File Summary shows all files accessed\n  - Enable Boot Logging for startup issues\n  - Save as PML to review later\n\nDOWNLOAD: https://learn.microsoft.com/en-us/sysinternals/downloads/procmon",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "si-autoruns",
+      "title": "Sysinternals: Autoruns",
+      "category": "Sysinternals",
+      "tags": [
+        "sysinternals",
+        "autoruns",
+        "startup",
+        "classic"
+      ],
+      "language": "plaintext",
+      "description": "Find and manage ALL auto-start programs.",
+      "code": "WHAT IT DOES:\n  Shows EVERYTHING that runs at startup \u2014 way more than Task Manager.\n  Registry, services, drivers, scheduled tasks, browser extensions, etc.\n\nKEY TABS:\n  Logon          Per-user startup (Run keys, Startup folder)\n  Services       Windows services\n  Drivers        Kernel drivers\n  Scheduled Tasks  Task Scheduler entries\n  Explorer       Shell extensions, toolbars\n  Boot Execute   Pre-Windows startup\n\nWORKFLOW:\n  1. Options > Hide Microsoft Entries (focus on 3rd party)\n  2. Options > Scan Options > Check VirusTotal.com\n  3. Yellow = file not found (safe to delete)\n  4. Red = VirusTotal flagged (investigate)\n  5. Uncheck to disable (doesn't delete)\n  6. Right-click > Delete to remove permanently\n\nCOMMAND LINE:\n  autorunsc.exe -accepteula -a * -c > C:\\Logs\\autoruns.csv\n\nDOWNLOAD: https://learn.microsoft.com/en-us/sysinternals/downloads/autoruns",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "si-bginfo",
+      "title": "Sysinternals: BGInfo",
+      "category": "Sysinternals",
+      "tags": [
+        "sysinternals",
+        "bginfo",
+        "desktop",
+        "deployment",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Display system info on the desktop wallpaper.",
+      "code": ":: Run with config file (silent)\nbginfo.exe config.bgi /timer:0 /silent /nolicprompt\n\n:: Deploy via startup script or GPO\n:: 1. Create config.bgi with desired fields\n:: 2. Copy bginfo.exe + .bgi to network share\n:: 3. Add to logon script:\n::    \\\\server\\share\\bginfo.exe \\\\server\\share\\config.bgi /timer:0 /silent /nolicprompt\n\n:: Common fields:\n::   Host Name, IP Address, User Name\n::   OS Version, Service Pack, Boot Time\n::   CPU, RAM, Disk Space\n::   Domain, Logon Server\n\n:: Download: https://learn.microsoft.com/en-us/sysinternals/downloads/bginfo",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sec-acl",
+      "title": "File Permissions / ACLs",
+      "category": "Security",
+      "tags": [
+        "permissions",
+        "acl",
+        "icacls",
+        "security",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "View and set NTFS file and folder permissions.",
+      "code": "# --- View permissions ---\nGet-Acl \"C:\\Folder\" | Format-List\nicacls \"C:\\Folder\"\n\n# --- Grant permission ---\nicacls \"C:\\Folder\" /grant \"DOMAIN\\User:(OI)(CI)M\"    # Modify\nicacls \"C:\\Folder\" /grant \"Everyone:(OI)(CI)R\"        # Read\n\n# --- Remove permission ---\nicacls \"C:\\Folder\" /remove \"DOMAIN\\User\"\n\n# --- Reset to inherited ---\nicacls \"C:\\Folder\" /reset /t /c\n\n# --- Take ownership ---\ntakeown /f \"C:\\Folder\" /r /d y\nicacls \"C:\\Folder\" /setowner \"Administrators\" /t /c\n\n# Permission letters:\n# F = Full   M = Modify   RX = Read+Execute\n# R = Read   W = Write\n# (OI) = Object Inherit   (CI) = Container Inherit",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sec-certutil",
+      "title": "Certificate Management (certutil)",
+      "category": "Security",
+      "tags": [
+        "certificates",
+        "certutil",
+        "ssl",
+        "security",
+        "classic"
+      ],
+      "language": "cmd",
+      "description": "Manage certificates, verify hashes, encode/decode.",
+      "code": ":: View local machine certificates\ncertutil -store My\ncertutil -store Root\n\n:: Import certificate\ncertutil -addstore Root \"C:\\cert.cer\"\ncertutil -importpfx \"C:\\cert.pfx\"\n\n:: Export certificate\ncertutil -exportPFX My \"SubjectName\" C:\\export.pfx\n\n:: Verify file hash\ncertutil -hashfile C:\\file.exe SHA256\ncertutil -hashfile C:\\file.exe MD5\n\n:: Encode/Decode Base64\ncertutil -encode input.txt encoded.txt\ncertutil -decode encoded.txt decoded.txt\n\n:: Check URL / download\ncertutil -URLcache -split -f \"https://example.com/file.exe\" C:\\temp\\file.exe\n\n:: Verify certificate chain\ncertutil -verify C:\\cert.cer",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "sec-usb-history",
+      "title": "USB Device History",
+      "category": "Security",
+      "tags": [
+        "usb",
+        "history",
+        "forensics",
+        "security",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "See all USB devices ever connected to a machine.",
+      "code": "# All USB storage devices (registry)\nGet-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\*\\*' | Select FriendlyName, Mfg\n\n# Detailed USB history\nGet-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-DriverFrameworks-UserMode/Operational'; ID=2003} -MaxEvents 20 | ForEach-Object {\n    [PSCustomObject]@{\n        Time = $_.TimeCreated\n        Message = $_.Message\n    }\n}\n\n# CMD approach\n# reg query HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR /s\n\n# List currently connected USB\nGet-PnpDevice -Class USB | Where Status -eq 'OK' | Select FriendlyName,InstanceId",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "ad-user-lookup",
+      "title": "AD User Lookup & Management",
+      "category": "Active Directory",
+      "tags": [
+        "ad",
+        "users",
+        "activedirectory",
+        "powershell",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Query and manage Active Directory users.",
+      "code": "# Requires: Import-Module ActiveDirectory\n\n# --- Find user ---\nGet-ADUser -Identity jsmith -Properties *\nGet-ADUser -Filter \"Name -like 'Smith*'\" | Select Name, SamAccountName, Enabled\n\n# --- Search by email ---\nGet-ADUser -Filter \"EmailAddress -eq 'john@company.com'\"\n\n# --- User's groups ---\nGet-ADPrincipalGroupMembership jsmith | Select Name\n\n# --- Locked out users ---\nSearch-ADAccount -LockedOut | Select Name, SamAccountName\n\n# --- Unlock account ---\nUnlock-ADAccount -Identity jsmith\n\n# --- Reset password ---\nSet-ADAccountPassword -Identity jsmith -Reset -NewPassword (ConvertTo-SecureString 'TempP@ss123!' -AsPlainText -Force)\nSet-ADUser -Identity jsmith -ChangePasswordAtLogon $true\n\n# --- Disable/Enable ---\nDisable-ADAccount -Identity jsmith\nEnable-ADAccount -Identity jsmith\n\n# --- Last logon ---\nGet-ADUser -Identity jsmith -Properties LastLogonDate | Select Name, LastLogonDate",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "ad-computer",
+      "title": "AD Computer Objects",
+      "category": "Active Directory",
+      "tags": [
+        "ad",
+        "computers",
+        "activedirectory",
+        "powershell",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Query and manage AD computer objects.",
+      "code": "# --- Find computer ---\nGet-ADComputer -Identity 'PC-001' -Properties *\nGet-ADComputer -Filter \"Name -like 'PC-*'\" | Select Name, DistinguishedName, Enabled\n\n# --- Stale computers (no logon in 90 days) ---\n$cutoff = (Get-Date).AddDays(-90)\nGet-ADComputer -Filter {LastLogonDate -lt $cutoff} -Properties LastLogonDate | Select Name, LastLogonDate\n\n# --- Move to different OU ---\nMove-ADObject -Identity (Get-ADComputer 'PC-001').DistinguishedName -TargetPath 'OU=Retired,DC=domain,DC=com'\n\n# --- Disable ---\nDisable-ADAccount -Identity 'PC-001$'\n\n# --- Count by OU ---\nGet-ADComputer -Filter * -SearchBase 'OU=Workstations,DC=domain,DC=com' | Measure-Object",
+      "pinned": false,
+      "history": []
+    },
+    {
+      "id": "ad-groups",
+      "title": "AD Group Membership",
+      "category": "Active Directory",
+      "tags": [
+        "ad",
+        "groups",
+        "activedirectory",
+        "powershell",
+        "classic"
+      ],
+      "language": "powershell",
+      "description": "Manage Active Directory group membership.",
+      "code": "# --- List group members ---\nGet-ADGroupMember -Identity 'IT Admins' | Select Name, SamAccountName\n\n# --- Recursive members (nested groups) ---\nGet-ADGroupMember -Identity 'IT Admins' -Recursive | Select Name\n\n# --- Add user to group ---\nAdd-ADGroupMember -Identity 'IT Admins' -Members jsmith\n\n# --- Remove from group ---\nRemove-ADGroupMember -Identity 'IT Admins' -Members jsmith -Confirm:$false\n\n# --- What groups is user in? ---\nGet-ADPrincipalGroupMembership jsmith | Select Name\n\n# --- Bulk add from CSV ---\nImport-Csv \"C:\\users.csv\" | ForEach-Object {\n    Add-ADGroupMember -Identity 'VPN Users' -Members $_.SamAccountName\n}\n\n# --- Compare two users' groups ---\n$a = (Get-ADPrincipalGroupMembership user1 | Select -Expand Name)\n$b = (Get-ADPrincipalGroupMembership user2 | Select -Expand Name)\nCompare-Object $a $b",
+      "pinned": false,
+      "history": []
+    }
+  ]
+}
