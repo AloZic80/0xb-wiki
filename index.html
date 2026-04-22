@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#00ff9f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>0xB Wiki</title>
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0a0a0f;color:#e0e0e0;font-family:'IBM Plex Mono','Fira Code',monospace;min-height:100vh;-webkit-tap-highlight-color:transparent}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0a0a0f}::-webkit-scrollbar-thumb{background:#1a1a2e;border-radius:3px}
+::selection{background:#00ff9f33;color:#00ff9f}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes flash{0%{background:#00ff9f22}100%{background:transparent}}
+input,textarea,select{font-family:inherit;background:#111118;border:1px solid #1a1a2e;border-radius:4px;color:#e0e0e0;font-size:12px;padding:8px 10px;outline:none;width:100%}
+input:focus,textarea:focus,select:focus{border-color:#00ff9f44}
+textarea{resize:vertical}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+.b{padding:5px 10px;border-radius:4px;font-size:10px;border:1px solid #1a1a2e;background:transparent;transition:all .15s}
+.b:active{transform:scale(.97)}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;animation:fadeIn .15s}
+.mb{background:#12121e;border-radius:8px;padding:20px;max-width:460px;width:100%;animation:slideIn .15s;max-height:85vh;overflow-y:auto}
+.card{margin-bottom:6px;border-radius:6px;overflow:hidden;border:1px solid #1a1a2e;background:#0c0c14;transition:border-color .2s}
+.card:hover{border-color:#222}
+.card.ex{background:#0d0d18}
+.tg{font-size:9px;padding:2px 6px;border-radius:3px;background:#1a1a2e;color:#888;cursor:pointer;display:inline-block}
+.sd{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.sd.on{background:#00ff9f;box-shadow:0 0 6px #00ff9f66}
+.sd.off{background:#ff3e3e}
+.sd.sy{background:#ffbe0b;animation:pulse 1s infinite}
+.pill{padding:4px 8px;border-radius:4px;font-size:9px;font-weight:600;white-space:nowrap;letter-spacing:.5px;cursor:pointer;border:1px solid #1a1a2e;background:transparent;color:#666;transition:all .15s}
+.pill:active{transform:scale(.96)}
+.run-b{margin:0 12px 8px;padding:8px 10px;background:#0f1a14;border:1px solid #00ff9f22;border-radius:5px}
+.tab-bar{display:flex;border-bottom:1px solid #1a1a2e;background:#0c0c14}
+.tab{flex:1;padding:10px;text-align:center;font-size:10px;font-weight:600;letter-spacing:1px;color:#555;border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:#00ff9f;border-bottom-color:#00ff9f}
+.tab:active{transform:scale(.97)}
+.tgl{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:11px;color:#888;padding:6px 0}
+.tgl-t{width:34px;height:18px;border-radius:9px;background:#1a1a2e;position:relative;transition:background .2s;flex-shrink:0}
+.tgl-t.on{background:#00ff9f33}
+.tgl-k{width:14px;height:14px;border-radius:50%;background:#555;position:absolute;top:2px;left:2px;transition:all .2s}
+.tgl-t.on .tgl-k{left:18px;background:#00ff9f}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const C={Scripts:{i:'\u2699\ufe0f',c:'#00ff9f'},Elevation:{i:'\ud83d\udd13',c:'#ff3e3e'},Intune:{i:'\u2601\ufe0f',c:'#00b4d8'},Deployment:{i:'\ud83d\udce6',c:'#ffbe0b'},'Remote Admin':{i:'\ud83c\udf10',c:'#c77dff'},Sysadmin:{i:'\ud83d\udda5\ufe0f',c:'#ff6d00'},'Silent Installs':{i:'\ud83d\udce5',c:'#06d6a0'},'Cheat Sheets':{i:'\ud83d\udcda',c:'#ffd166'},Troubleshooting:{i:'\ud83d\udd27',c:'#ef476f'},PowerShell:{i:'\u26a1',c:'#5391fe'},Sysinternals:{i:'\ud83d\udd2c',c:'#8338ec'},Security:{i:'\ud83d\udee1\ufe0f',c:'#e63946'},'Active Directory':{i:'\ud83c\udfe2',c:'#48cae4'},Custom:{i:'\ud83d\udcdd',c:'#adb5bd'}};
+const PP=[{l:'USB',p:'E:\\\\Scripts\\\\'},{l:'OneDrive',p:'C:\\\\Users\\\\alonzo\\\\OneDrive\\\\Scripts\\\\'},{l:'C:\\\\Tools',p:'C:\\\\Tools\\\\'},{l:'Network',p:'\\\\\\\\server\\\\share\\\\Scripts\\\\'}];
+const LC={powershell:'#012456',cmd:'#1a1a2e',plaintext:'#2a2a2a'};
+
+let S={entries:[],search:'',cat:'All',exp:null,cop:null,showAdd:false,eid:null,showPath:false,path:'',delId:null,histE:null,
+pat:localStorage.getItem('0xb-pat')||'',gid:localStorage.getItem('0xb-gid')||'',
+setup:!!(localStorage.getItem('0xb-pat')&&localStorage.getItem('0xb-gid')),
+sync:'idle',lastSync:'',pending:false,tab:'wiki',
+ne:{title:'',category:'Custom',tags:'',language:'powershell',description:'',code:'',scriptFile:'',packageUrl:''},
+bat:{ps1:'',loc:'same',sub:'',custom:'',admin:true,bypass:true,pause:false,hidden:false,log:false,logFile:'log.txt'},
+iw:{source:'',setup:'install.ps1',output:'',quiet:true},
+det:{type:'registry',regPath:'',regValue:'',expected:'',filePath:'',version:'',serviceName:''}};
+
+const $=id=>document.getElementById(id);
+const esc=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML;};
+
+async function gFetch(){if(!S.pat||!S.gid)return null;S.sync='syncing';render();
+try{const r=await fetch(`https://api.github.com/gists/${S.gid}`,{headers:{'Authorization':`token ${S.pat}`}});
+if(!r.ok)throw 0;const d=await r.json();const f=d.files['wiki-data.json'];if(!f)throw 0;
+const p=JSON.parse(f.content);S.sync='online';S.lastSync=new Date().toLocaleTimeString();return p;}
+catch(e){S.sync=navigator.onLine?'error':'offline';return null;}}
+
+async function gPush(){if(!S.pat||!S.gid)return;S.sync='syncing';render();
+const pl={version:2,scriptPath:S.path,lastSync:new Date().toISOString(),entries:S.entries};
+try{const r=await fetch(`https://api.github.com/gists/${S.gid}`,{method:'PATCH',
+headers:{'Authorization':`token ${S.pat}`,'Content-Type':'application/json'},
+body:JSON.stringify({files:{'wiki-data.json':{content:JSON.stringify(pl,null,2)}}})});
+if(!r.ok)throw 0;S.sync='online';S.lastSync=new Date().toLocaleTimeString();S.pending=false;
+localStorage.setItem('0xb-cache',JSON.stringify(pl));}
+catch(e){S.sync=navigator.onLine?'error':'offline';S.pending=true;
+localStorage.setItem('0xb-cache',JSON.stringify({entries:S.entries,scriptPath:S.path}));}
+render();}
+
+async function loadData(){const r=await gFetch();
+if(r&&r.entries){S.entries=r.entries;S.path=r.scriptPath||'';localStorage.setItem('0xb-cache',JSON.stringify(r));}
+else{const c=localStorage.getItem('0xb-cache');if(c){const p=JSON.parse(c);S.entries=p.entries||[];S.path=p.scriptPath||'';S.sync='offline';}}
+render();}
+
+function persist(){localStorage.setItem('0xb-cache',JSON.stringify({entries:S.entries,scriptPath:S.path}));
+if(navigator.onLine&&S.pat&&S.gid)gPush();else{S.pending=true;render();}}
+
+window.addEventListener('online',()=>{if(S.pending)gPush();else{S.sync='online';render();}});
+window.addEventListener('offline',()=>{S.sync='offline';render();});
+
+function runCmd(e){if(!S.path.trim()||!e.scriptFile)return null;
+const b=S.path.replace(/[\\\/]$/,''),f=`${b}\\${e.scriptFile}`;
+if(e.language==='powershell')return`powershell.exe -ExecutionPolicy Bypass -File "${f}"`;
+if(e.language==='cmd')return`cmd.exe /c "${f}"`;return`"${f}"`;}
+
+function copy(t,id){navigator.clipboard.writeText(t).catch(()=>{});S.cop=id;render();setTimeout(()=>{S.cop=null;render();},1500);}
+
+function render(){
+if(!S.setup){renderSetup();return;}
+if(S.tab==='tools'){renderTools();return;}
+const fl=S.entries.filter(e=>{const cm=S.cat==='All'||e.category===S.cat;if(!S.search.trim())return cm;
+const q=S.search.toLowerCase();return cm&&(e.title.toLowerCase().includes(q)||e.description.toLowerCase().includes(q)||(e.tags||[]).some(t=>t.includes(q))||e.code.toLowerCase().includes(q));});
+const so=[...fl.filter(e=>e.pinned),...fl.filter(e=>!e.pinned)];
+const uc=[...new Set(S.entries.map(e=>e.category))];
+const cs=['All',...Object.keys(C)].filter(c=>c==='All'||uc.includes(c));
+const sc={online:'#00ff9f',offline:'#ff3e3e',syncing:'#ffbe0b',error:'#ff3e3e',idle:'#444'}[S.sync]||'#444';
+const sl={online:'SYNCED',offline:'OFFLINE',syncing:'SYNCING...',error:'ERROR',idle:''}[S.sync]||'';
+
+$('app').innerHTML=`
+${S.delId?`<div class="mo" onclick="S.delId=null;render()"><div class="mb" style="border:1px solid #ff3e3e44" onclick="event.stopPropagation()">
+<div style="font-size:12px;line-height:1.5;margin-bottom:20px">Delete "<b>${esc(S.entries.find(e=>e.id===S.delId)?.title||'')}</b>"? This can't be undone.</div>
+<div style="display:flex;gap:8px;justify-content:flex-end">
+<button class="b" onclick="S.delId=null;render()" style="padding:7px 16px;border-color:#333;color:#888;font-size:11px">CANCEL</button>
+<button class="b" onclick="doDelete()" style="padding:7px 16px;background:#ff3e3e22;border-color:#ff3e3e66;color:#ff3e3e;font-size:11px;font-weight:600">DELETE</button>
+</div></div></div>`:''}
+${S.histE?renderHist():''}
+
+<div class="tab-bar">
+<button class="tab active" onclick="S.tab='wiki';render()">\u2315 WIKI</button>
+<button class="tab" onclick="S.tab='tools';render()">\u2692 TOOLS</button>
+</div>
+
+<div style="border-bottom:1px solid #1a1a2e;background:${S.showPath?'#0e0e1a':'#0c0c14'}">
+<button onclick="S.showPath=!S.showPath;render()" style="width:100%;padding:8px 16px;color:${S.path?'#00ff9f':'#555'};font-size:10px;text-align:left;display:flex;align-items:center;gap:8px">
+<span>\ud83d\udcc2</span><span style="font-weight:600;letter-spacing:1px">SCRIPT PATH</span>
+${S.path?`<span style="color:#666;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(S.path)}</span>`:''}
+<span style="color:#444;font-size:8px">${S.showPath?'\u25b2':'\u25bc'}</span></button>
+${S.showPath?`<div style="padding:0 16px 12px;animation:slideIn .15s"><div style="font-size:9px;color:#555;margin-bottom:6px">Script folder path. Entries with a filename get a run command.</div>
+<input value="${esc(S.path)}" oninput="S.path=this.value;persist()" placeholder="E:\\Scripts\\" style="color:#00ff9f;border-color:${S.path?'#00ff9f33':'#1a1a2e'};margin-bottom:6px;border-radius:5px">
+<div style="display:flex;gap:4px;flex-wrap:wrap">
+${PP.map(p=>`<button class="b" onclick="S.path='${p.p}';persist()" style="font-size:8px;font-weight:600;border-color:${S.path===p.p?'#00ff9f44':'#1a1a2e'};color:${S.path===p.p?'#00ff9f':'#555'}">${p.l}</button>`).join('')}
+${S.path?`<button class="b" onclick="S.path='';persist()" style="font-size:8px;border-color:#ff3e3e33;color:#ff3e3e88">CLEAR</button>`:''}</div></div>`:''}
+</div>
+
+<div style="border-bottom:1px solid #1a1a2e;padding:12px 16px;background:linear-gradient(180deg,#0f0f1a,#0a0a0f);position:sticky;top:0;z-index:100">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-size:14px;color:#00ff9f;font-weight:700;letter-spacing:2px">0xB<span style="color:#555;font-weight:400">://</span>WIKI</span>
+<span class="sd ${S.sync==='online'?'on':S.sync==='syncing'?'sy':'off'}"></span>
+<span style="font-size:8px;color:${sc}">${sl}</span>
+</div>
+<div style="display:flex;gap:6px">
+<button onclick="toggleAdd()" style="background:${S.showAdd?'#ff3e3e22':'#00ff9f11'};border:1px solid ${S.showAdd?'#ff3e3e44':'#00ff9f33'};color:${S.showAdd?'#ff3e3e':'#00ff9f'};padding:5px 10px;border-radius:4px;font-size:10px;font-weight:600">${S.showAdd?'\u2715':'+ NEW'}</button>
+<button class="b" onclick="manualSync()" style="border-color:#333;color:#555;font-size:10px;padding:5px 8px">\u21bb</button>
+</div></div>
+<div style="position:relative"><span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:#555;font-size:12px">\u2315</span>
+<input value="${esc(S.search)}" oninput="S.search=this.value;render()" placeholder="search commands, tags, code..." style="padding:8px 10px 8px 28px;border-radius:5px;font-size:12px"></div>
+<div style="display:flex;gap:4px;margin-top:8px;overflow-x:auto;padding-bottom:2px;-ms-overflow-style:none;scrollbar-width:none">
+${cs.map(cat=>{const m=C[cat];const a=S.cat===cat;const col=m?.c||'#00ff9f';
+return`<button onclick="S.cat='${cat}';render()" class="pill" style="${a?`border-color:${col}66;background:${col}15;color:${col}`:''}">${m?.i||'\ud83d\udcc1'} ${cat.toUpperCase()}</button>`;}).join('')}
+</div></div>
+
+${S.showAdd?renderForm():''}
+
+<div style="padding:10px 12px">
+<div style="font-size:9px;color:#444;margin-bottom:8px;letter-spacing:1px;display:flex;justify-content:space-between">
+<span>${so.length} ENTRIES${S.search?` \u2014 "${esc(S.search.toUpperCase())}"`:''}</span>
+<span>${S.entries.length} total</span></div>
+${so.length===0?'<div style="text-align:center;padding:40px;color:#444"><div style="font-size:20px;margin-bottom:8px">\u2205</div><div style="font-size:11px">No entries found.</div></div>':''}
+${so.map((e,i)=>renderCard(e,i)).join('')}
+</div>
+<div style="padding:16px;text-align:center;border-top:1px solid #111">
+<div style="color:#1a1a2e;font-size:8px;letter-spacing:2px;margin-bottom:3px">POWERED BY BOTTLEDPIXELS</div>
+${S.lastSync?`<div style="color:#151520;font-size:7px">Last sync: ${S.lastSync}</div>`:''}
+<button onclick="logout()" style="color:#222;font-size:7px;margin-top:6px;letter-spacing:1px">DISCONNECT</button>
+</div>`;
+}
+
+function renderSetup(){$('app').innerHTML=`
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="max-width:380px;width:100%;animation:slideIn .3s">
+<div style="text-align:center;margin-bottom:28px">
+<div style="font-size:20px;color:#00ff9f;font-weight:700;letter-spacing:3px;margin-bottom:6px">0xB<span style="color:#555;font-weight:400">://</span>WIKI</div>
+<div style="font-size:10px;color:#444">Connect your GitHub Gist to sync</div></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:4px">PERSONAL ACCESS TOKEN</label>
+<input id="sp" type="password" placeholder="ghp_xxxxxxxxxxxx" value="${esc(S.pat)}" style="padding:10px">
+<div style="font-size:8px;color:#333;margin-top:3px">GitHub > Settings > Developer settings > Tokens (classic) > Scope: <span style="color:#00ff9f">gist</span></div></div>
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:4px">GIST ID</label>
+<input id="sg" placeholder="abc123def456..." value="${esc(S.gid)}" style="padding:10px">
+<div style="font-size:8px;color:#333;margin-top:3px">Create Secret Gist with file <span style="color:#00ff9f">wiki-data.json</span>. ID = last part of URL.</div></div>
+<button onclick="doSetup()" style="padding:12px;background:#00ff9f22;border:1px solid #00ff9f44;color:#00ff9f;border-radius:5px;font-size:12px;font-weight:600;letter-spacing:1px">CONNECT</button>
+<div id="se" style="font-size:10px;color:#ff3e3e;text-align:center;display:none"></div>
+</div></div></div>`;}
+
+function renderForm(){const n=S.ne;const v=n.title.trim()&&n.code.trim();
+return`<div style="padding:14px 16px;border-bottom:1px solid #00ff9f22;background:#0d0d15;animation:slideIn .2s">
+<div style="font-size:10px;color:#00ff9f;font-weight:600;margin-bottom:8px;letter-spacing:1px">${S.eid?'\u270e EDIT':'\u25c8 NEW'} ENTRY</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<input placeholder="Title" value="${esc(n.title)}" oninput="S.ne.title=this.value;render()">
+<div style="display:flex;gap:6px">
+<select onchange="S.ne.category=this.value" style="flex:1">${Object.keys(C).map(c=>`<option ${n.category===c?'selected':''}>${c}</option>`).join('')}</select>
+<select onchange="S.ne.language=this.value" style="flex:1"><option ${n.language==='powershell'?'selected':''} value="powershell">PowerShell</option><option ${n.language==='cmd'?'selected':''} value="cmd">CMD</option><option ${n.language==='plaintext'?'selected':''} value="plaintext">Plaintext</option></select></div>
+<input placeholder="Script filename (e.g. Deploy-Teams.ps1)" value="${esc(n.scriptFile)}" oninput="S.ne.scriptFile=this.value" style="border-color:#c77dff33;color:#c77dff">
+<input placeholder="Package URL (.intunewin download link)" value="${esc(n.packageUrl||'')}" oninput="S.ne.packageUrl=this.value" style="border-color:#06d6a033;color:#06d6a0">
+<input placeholder="Tags (comma separated)" value="${esc(n.tags)}" oninput="S.ne.tags=this.value">
+<textarea placeholder="Description" rows="2" oninput="S.ne.description=this.value">${esc(n.description)}</textarea>
+<textarea placeholder="Code / commands" rows="5" oninput="S.ne.code=this.value" style="color:#00ff9f">${esc(n.code)}</textarea>
+<button onclick="${S.eid?'saveEdit()':'addEntry()'}" ${v?'':'disabled'} style="padding:9px;border-radius:4px;background:${v?'#00ff9f22':'#111'};border:1px solid ${v?'#00ff9f44':'#222'};color:${v?'#00ff9f':'#444'};font-size:11px;font-weight:600;letter-spacing:1px;cursor:${v?'pointer':'not-allowed'}">${S.eid?'SAVE CHANGES':'ADD ENTRY'}</button>
+</div></div>`;}
+
+function renderCard(e,i){const m=C[e.category]||C.Custom;const ex=S.exp===e.id;const rc=runCmd(e);const hh=e.history?.length>0;
+return`<div class="card${ex?' ex':''}" style="border-color:${ex?m.c+'44':'#1a1a2e'};animation:slideIn .12s ease-out ${i*.015}s both">
+<div onclick="S.exp=S.exp==='${e.id}'?null:'${e.id}';render()" style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+<div style="flex:1;min-width:0">
+<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap">
+${e.pinned?'<span style="color:#ffbe0b;font-size:9px">\u2605</span>':''}
+<span style="font-size:12px;font-weight:600;color:#e8e8e8">${esc(e.title)}</span>
+<span style="font-size:8px;padding:1px 5px;border-radius:3px;background:${m.c}18;color:${m.c};font-weight:500;letter-spacing:.3px">${e.category.toUpperCase()}</span>
+${hh?`<span style="font-size:8px;color:#444">v${e.history.length+1}</span>`:''}
+${(e.tags||[]).includes('mine')?'<span style="font-size:8px;padding:1px 5px;border-radius:3px;background:#ffbe0b15;color:#ffbe0b">MINE</span>':''}
+</div>
+<div style="font-size:10px;color:#666;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:${ex?'normal':'nowrap'}">${esc(e.description)}</div>
+</div>
+<span style="color:#444;font-size:9px;flex-shrink:0;margin-top:2px">${ex?'\u25b2':'\u25bc'}</span></div>
+${ex?renderExp(e,rc,hh,m):''}
+</div>`;}
+
+function renderExp(e,rc,hh,m){
+return`<div style="animation:slideIn .12s">
+${rc?`<div class="run-b"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+<span style="font-size:8px;color:#00ff9f88;font-weight:600;letter-spacing:1px">\u25b6 RUN FROM PATH</span>
+<button class="b" onclick="event.stopPropagation();copy(\`${rc.replace(/`/g,'\\`').replace(/\\/g,'\\\\')}\`,'${e.id}-r')" style="background:${S.cop===e.id+'-r'?'#00ff9f33':'#1a2e1a'};border-color:#00ff9f33;color:#00ff9f;font-size:8px;font-weight:600;padding:3px 8px">${S.cop===e.id+'-r'?'\u2713':'COPY'}</button>
+</div><code style="font-size:10px;color:#00ff9f;word-break:break-all;line-height:1.4">${esc(rc)}</code></div>`:''}
+${e.packageUrl?`<div style="margin:0 12px 8px"><a href="${esc(e.packageUrl)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;background:#06d6a011;border:1px solid #06d6a033;color:#06d6a0;font-size:9px;font-weight:600;text-decoration:none;letter-spacing:.5px">\u2b07 PACKAGE DOWNLOAD</a></div>`:''}
+<div style="padding:0 12px 6px;display:flex;gap:3px;flex-wrap:wrap">
+${(e.tags||[]).filter(t=>t!=='mine').map(t=>`<span class="tg" onclick="S.search='${t}';S.cat='All';render()">#${t}</span>`).join('')}
+<span class="tg" style="background:${LC[e.language]||'#1a1a2e'};color:${e.language==='powershell'?'#5391fe':'#aaa'}">${e.language}</span>
+${e.scriptFile?`<span class="tg" style="background:#c77dff15;color:#c77dff">\ud83d\udcc4 ${esc(e.scriptFile)}</span>`:''}
+</div>
+<div style="position:relative;margin:0 12px 8px">
+<button class="b" onclick="event.stopPropagation();copy(getCode('${e.id}'),'${e.id}')" style="position:absolute;top:6px;right:6px;z-index:2;background:${S.cop===e.id?'#00ff9f33':'#1a1a2e'};border-color:${S.cop===e.id?'#00ff9f':'#333'};color:${S.cop===e.id?'#00ff9f':'#777'};font-size:9px;font-weight:600;padding:3px 8px">${S.cop===e.id?'\u2713 COPIED':'COPY'}</button>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:12px;padding-top:30px;overflow-x:auto;font-size:10px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap;word-break:break-word">${esc(e.code)}</pre></div>
+<div style="padding:0 12px 10px;display:flex;gap:4px;flex-wrap:wrap">
+<button class="b" onclick="togglePin('${e.id}')" style="color:${e.pinned?'#ffbe0b':'#555'};font-size:9px">${e.pinned?'\u2605 UNPIN':'\u2606 PIN'}</button>
+<button class="b" onclick="startEdit('${e.id}')" style="color:#00b4d8;font-size:9px">\u270e EDIT</button>
+${hh?`<button class="b" onclick="showHist('${e.id}')" style="border-color:#c77dff33;color:#c77dff;font-size:9px">\u27f2 HISTORY (${e.history.length})</button>`:''}
+<button class="b" onclick="S.delId='${e.id}';render()" style="color:#ff3e3e88;font-size:9px">\u2715 DEL</button>
+</div></div>`;}
+
+function renderHist(){const e=S.histE;if(!e?.history?.length)return'';const r=[...e.history].reverse();
+return`<div class="mo" onclick="S.histE=null;render()"><div class="mb" style="border:1px solid #00ff9f33;max-width:480px" onclick="event.stopPropagation()">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<span style="font-size:11px;color:#00ff9f;font-weight:600;letter-spacing:1px">VERSION HISTORY</span>
+<button class="b" onclick="S.histE=null;render()" style="border-color:#333;color:#888;font-size:9px">CLOSE</button></div>
+<div style="font-size:10px;color:#777;margin-bottom:12px">${esc(e.title)} \u2014 ${e.history.length} prior</div>
+${r.map((s,i)=>`<div style="border:1px solid #1a1a2e;border-radius:5px;margin-bottom:8px;padding:10px;background:#0a0a12">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+<span style="font-size:9px;color:#555">v${e.history.length-i} \u2014 ${new Date(s.savedAt).toLocaleString()}</span>
+<button class="b" onclick="restoreV('${e.id}',${e.history.length-1-i})" style="background:#00ff9f11;border-color:#00ff9f33;color:#00ff9f;font-size:8px;font-weight:600">RESTORE</button></div>
+<pre style="background:#08080e;border:1px solid #151520;border-radius:4px;padding:8px;font-size:9px;color:#7a9bb5;overflow-x:auto;white-space:pre-wrap;word-break:break-word;max-height:160px">${esc(s.code)}</pre>
+</div>`).join('')}</div></div>`;}
+
+// ═══ TOOLS TAB ═══
+function renderTools(){
+$('app').innerHTML=`
+<div class="tab-bar">
+<button class="tab" onclick="S.tab='wiki';render()">\u2315 WIKI</button>
+<button class="tab active" onclick="S.tab='tools';render()">\u2692 TOOLS</button>
+</div>
+<div style="padding:16px">
+
+<!-- BAT BUILDER -->
+<div style="border:1px solid #1a1a2e;border-radius:6px;margin-bottom:12px;background:#0c0c14;overflow:hidden">
+<div style="padding:10px 14px;border-bottom:1px solid #1a1a2e;display:flex;align-items:center;gap:8px">
+<span style="font-size:14px;color:#00ff9f;font-weight:700;letter-spacing:1px">BAT BUILDER</span>
+<span style="font-size:9px;color:#444">Generate .bat wrappers for .ps1 scripts</span></div>
+<div style="padding:14px">
+<div style="margin-bottom:10px">
+<label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:4px">PS1 FILENAME</label>
+<input value="${esc(S.bat.ps1)}" oninput="S.bat.ps1=this.value;render()" placeholder="Deploy-Teams.ps1"></div>
+
+<div style="margin-bottom:10px">
+<label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:4px">PS1 LOCATION</label>
+<div style="display:flex;gap:6px;margin-bottom:6px">
+${['same','sub','custom'].map(v=>`<button class="b" onclick="S.bat.loc='${v}';render()" style="flex:1;text-align:center;font-size:10px;${S.bat.loc===v?'border-color:#00ff9f55;background:#00ff9f0d;color:#00ff9f':''}">${v==='same'?'Same folder':v==='sub'?'Subfolder':'Custom'}</button>`).join('')}</div>
+${S.bat.loc==='sub'?`<input value="${esc(S.bat.sub)}" oninput="S.bat.sub=this.value;render()" placeholder="source" style="margin-top:4px">`:
+S.bat.loc==='custom'?`<input value="${esc(S.bat.custom)}" oninput="S.bat.custom=this.value;render()" placeholder="C:\\Scripts\\Deployment" style="margin-top:4px">`:''}</div>
+
+<div style="border:1px solid #1a1a2e;border-radius:5px;padding:10px;background:#0a0a12;margin-bottom:12px">
+<label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:6px">OPTIONS</label>
+${[['admin','Run as Administrator','Elevate if not admin'],['bypass','Bypass Execution Policy',''],['pause','Pause after execution','See output before close'],['hidden','Hidden window','No PS window flash'],['log','Log output to file','']].map(([k,l])=>`
+<div class="tgl" onclick="S.bat.${k}=!S.bat.${k};render()"><div class="tgl-t${S.bat[k]?' on':''}"><div class="tgl-k"></div></div><span>${l}</span></div>`).join('')}
+${S.bat.log?`<input value="${esc(S.bat.logFile)}" oninput="S.bat.logFile=this.value;render()" placeholder="log.txt" style="margin-left:44px;width:calc(100% - 44px);font-size:10px;padding:5px 8px">`:''}</div>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+<label style="font-size:9px;color:#555;letter-spacing:1px;margin:0">GENERATED .BAT</label>
+<div style="display:flex;gap:4px">
+<button class="b" onclick="copy(genBat(),'bat')" style="background:${S.cop==='bat'?'#00ff9f33':'#00ff9f11'};border-color:#00ff9f33;color:#00ff9f;font-size:9px;font-weight:600">${S.cop==='bat'?'\u2713 COPIED':'COPY'}</button>
+<button class="b" onclick="dlBat()" style="background:#c77dff11;border-color:#c77dff33;color:#c77dff;font-size:9px;font-weight:600">DOWNLOAD</button></div></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:10px;line-height:1.6;color:#b8d4e3;white-space:pre-wrap;word-break:break-word">${esc(genBat())}</pre>
+<div style="font-size:9px;color:#333;margin-top:6px">Save as: <span style="color:#ffbe0b">Run-${esc((S.bat.ps1||'script').replace(/\.ps1$/i,''))}.bat</span></div>
+</div></div>
+
+<!-- INTUNEWIN COMMAND GENERATOR -->
+<div style="border:1px solid #1a1a2e;border-radius:6px;margin-bottom:12px;background:#0c0c14;overflow:hidden">
+<div style="padding:10px 14px;border-bottom:1px solid #1a1a2e;display:flex;align-items:center;gap:8px">
+<span style="font-size:14px;color:#00b4d8;font-weight:700;letter-spacing:1px">INTUNEWIN</span>
+<span style="font-size:9px;color:#444">Package builder command</span></div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">SOURCE FOLDER</label>
+<input value="${esc(S.iw.source)}" oninput="S.iw.source=this.value;render()" placeholder="C:\\IntuneApps\\Teams\\source"></div>
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">SETUP FILE</label>
+<input value="${esc(S.iw.setup)}" oninput="S.iw.setup=this.value;render()" placeholder="install.ps1"></div>
+<div><label style="font-size:9px;color:#555;letter-spacing:1px;display:block;margin-bottom:3px">OUTPUT FOLDER</label>
+<input value="${esc(S.iw.output)}" oninput="S.iw.output=this.value;render()" placeholder="C:\\IntuneApps\\Teams\\output"></div>
+<div class="tgl" onclick="S.iw.quiet=!S.iw.quiet;render()"><div class="tgl-t${S.iw.quiet?' on':''}"><div class="tgl-k"></div></div><span>Quiet mode (no prompts)</span></div>
+<div style="display:flex;justify-content:flex-end"><button class="b" onclick="copy(genIW(),'iw')" style="background:${S.cop==='iw'?'#00ff9f33':'#00b4d811'};border-color:#00b4d833;color:#00b4d8;font-size:9px;font-weight:600">${S.cop==='iw'?'\u2713 COPIED':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:10px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap">${esc(genIW())}</pre>
+</div></div>
+
+<!-- DETECTION SCRIPT GENERATOR -->
+<div style="border:1px solid #1a1a2e;border-radius:6px;margin-bottom:12px;background:#0c0c14;overflow:hidden">
+<div style="padding:10px 14px;border-bottom:1px solid #1a1a2e;display:flex;align-items:center;gap:8px">
+<span style="font-size:14px;color:#ffbe0b;font-weight:700;letter-spacing:1px">DETECT</span>
+<span style="font-size:9px;color:#444">Intune detection script generator</span></div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;gap:6px">
+${['registry','file','service'].map(t=>`<button class="b" onclick="S.det.type='${t}';render()" style="flex:1;text-align:center;font-size:10px;${S.det.type===t?'border-color:#ffbe0b55;background:#ffbe0b0d;color:#ffbe0b':''}">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}</div>
+${S.det.type==='registry'?`
+<input value="${esc(S.det.regPath)}" oninput="S.det.regPath=this.value;render()" placeholder="HKLM:\\SOFTWARE\\...">
+<input value="${esc(S.det.regValue)}" oninput="S.det.regValue=this.value;render()" placeholder="Registry value name">
+<input value="${esc(S.det.expected)}" oninput="S.det.expected=this.value;render()" placeholder="Expected value (regex match)">`:
+S.det.type==='file'?`
+<input value="${esc(S.det.filePath)}" oninput="S.det.filePath=this.value;render()" placeholder="C:\\Program Files\\App\\app.exe">
+<input value="${esc(S.det.version)}" oninput="S.det.version=this.value;render()" placeholder="Minimum version (optional)">`:
+`<input value="${esc(S.det.serviceName)}" oninput="S.det.serviceName=this.value;render()" placeholder="Service name">`}
+<div style="display:flex;justify-content:flex-end"><button class="b" onclick="copy(genDet(),'det')" style="background:${S.cop==='det'?'#00ff9f33':'#ffbe0b11'};border-color:#ffbe0b33;color:#ffbe0b;font-size:9px;font-weight:600">${S.cop==='det'?'\u2713 COPIED':'COPY'}</button></div>
+<pre style="background:#08080e;border:1px solid #1a1a2e;border-radius:5px;padding:10px;font-size:10px;line-height:1.5;color:#b8d4e3;white-space:pre-wrap">${esc(genDet())}</pre>
+</div></div>
+
+</div>
+<div style="padding:16px;text-align:center;border-top:1px solid #111;color:#1a1a2e;font-size:8px;letter-spacing:2px">POWERED BY BOTTLEDPIXELS</div>`;
+}
+
+// ═══ GENERATORS ═══
+function genBat(){const b=S.bat;const ps1=b.ps1||'script.ps1';let p;
+if(b.loc==='same')p=`"%~dp0${ps1}"`;else if(b.loc==='sub')p=`"%~dp0${b.sub||'source'}\\${ps1}"`;
+else p=`"${(b.custom||'C:\\Scripts').replace(/[\\\/]$/,'')}\\${ps1}"`;
+let l=['@echo off'];
+if(b.admin){l.push('',':: Elevate if not admin','net session >nul 2>&1','if %errorlevel% neq 0 (',
+`    powershell -Command "Start-Process cmd -ArgumentList '/c \\"%~f0\\"' -Verb RunAs"`,'    exit /b',')');}
+l.push('');let a=[];if(b.hidden)a.push('-WindowStyle Hidden');if(b.bypass)a.push('-ExecutionPolicy Bypass');a.push('-NoProfile',`-File ${p}`);
+if(b.log){const lf=`"%~dp0${b.logFile||'log.txt'}"`;l.push(`powershell.exe ${a.join(' ')} > ${lf} 2>&1`);}
+else l.push(`powershell.exe ${a.join(' ')}`);
+if(b.pause)l.push('','pause');return l.join('\n');}
+
+function dlBat(){const t=genBat();const n=`Run-${(S.bat.ps1||'script').replace(/\.ps1$/i,'')}.bat`;
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download=n;a.click();}
+
+function genIW(){const w=S.iw;const s=w.source||'C:\\IntuneApps\\AppName\\source';const f=w.setup||'install.ps1';const o=w.output||'C:\\IntuneApps\\AppName\\output';
+return`IntuneWinAppUtil.exe -c "${s}" -s ${f} -o "${o}"${w.quiet?' -q':''}`;}
+
+function genDet(){const d=S.det;
+if(d.type==='registry'){const p=d.regPath||'HKLM:\\SOFTWARE\\...';const v=d.regValue||'ValueName';const x=d.expected||'ExpectedValue';
+return`$regPath = "${p}"\n$regValue = "${v}"\n$expected = "${x}"\n\ntry {\n    $val = (Get-ItemProperty -Path $regPath -Name $regValue -ErrorAction Stop).$regValue\n    if ($val -match $expected) {\n        Write-Host "Detected"\n        exit 0\n    }\n} catch {}\nWrite-Host "Not detected"\nexit 1`;}
+if(d.type==='file'){const f=d.filePath||'C:\\Program Files\\App\\app.exe';
+if(d.version)return`$targetFile = "${f}"\n$requiredVersion = "${d.version}"\nif (Test-Path $targetFile) {\n    $ver = (Get-Item $targetFile).VersionInfo.ProductVersion\n    if ([version]$ver -ge [version]$requiredVersion) {\n        Write-Host "Detected v$ver"\n        exit 0\n    }\n}\nWrite-Host "Not detected"\nexit 1`;
+return`$targetFile = "${f}"\nif (Test-Path $targetFile) {\n    Write-Host "Detected"\n    exit 0\n}\nWrite-Host "Not detected"\nexit 1`;}
+const sn=d.serviceName||'ServiceName';
+return`$svc = Get-Service -Name "${sn}" -ErrorAction SilentlyContinue\nif ($svc -and $svc.Status -eq 'Running') {\n    Write-Host "Detected - ${sn} running"\n    exit 0\n}\nWrite-Host "Not detected"\nexit 1`;}
+
+// ═══ ACTIONS ═══
+function getCode(id){const e=S.entries.find(x=>x.id===id);return e?e.code:'';}
+function toggleAdd(){S.eid=null;S.ne={title:'',category:'Custom',tags:'',language:'powershell',description:'',code:'',scriptFile:'',packageUrl:''};S.showAdd=!S.showAdd;render();}
+function togglePin(id){S.entries=S.entries.map(e=>e.id===id?{...e,pinned:!e.pinned}:e);persist();}
+function doDelete(){S.entries=S.entries.filter(e=>e.id!==S.delId);if(S.exp===S.delId)S.exp=null;S.delId=null;persist();}
+function addEntry(){const n=S.ne;S.entries=[{id:'c-'+Date.now(),title:n.title,category:n.category,
+tags:n.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean),language:n.language,description:n.description,
+code:n.code,scriptFile:n.scriptFile,packageUrl:n.packageUrl,pinned:false,history:[]},...S.entries];
+S.ne={title:'',category:'Custom',tags:'',language:'powershell',description:'',code:'',scriptFile:'',packageUrl:''};S.showAdd=false;persist();}
+function startEdit(id){const e=S.entries.find(x=>x.id===id);if(!e)return;S.eid=id;
+S.ne={title:e.title,category:e.category,tags:(e.tags||[]).join(', '),language:e.language,description:e.description,code:e.code,scriptFile:e.scriptFile||'',packageUrl:e.packageUrl||''};S.showAdd=true;render();}
+function saveEdit(){S.entries=S.entries.map(e=>{if(e.id!==S.eid)return e;
+const snap={title:e.title,description:e.description,code:e.code,tags:[...(e.tags||[])],language:e.language,scriptFile:e.scriptFile,savedAt:new Date().toISOString()};
+const n=S.ne;return{...e,title:n.title,category:n.category,tags:n.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean),
+language:n.language,description:n.description,code:n.code,scriptFile:n.scriptFile,packageUrl:n.packageUrl,history:[...(e.history||[]),snap]};});
+S.eid=null;S.ne={title:'',category:'Custom',tags:'',language:'powershell',description:'',code:'',scriptFile:'',packageUrl:''};S.showAdd=false;persist();}
+function showHist(id){const e=S.entries.find(x=>x.id===id);if(e)S.histE=e;render();}
+function restoreV(id,idx){S.entries=S.entries.map(e=>{if(e.id!==id)return e;const s=e.history[idx];
+const cur={title:e.title,description:e.description,code:e.code,tags:[...(e.tags||[])],language:e.language,scriptFile:e.scriptFile,savedAt:new Date().toISOString()};
+return{...e,title:s.title,description:s.description,code:s.code,tags:s.tags||e.tags,language:s.language||e.language,scriptFile:s.scriptFile||e.scriptFile,history:[...(e.history||[]),cur]};});
+S.histE=null;persist();}
+async function doSetup(){const p=$('sp').value.trim(),g=$('sg').value.trim(),e=$('se');
+if(!p||!g){e.textContent='Both fields required.';e.style.display='block';return;}
+e.textContent='Connecting...';e.style.display='block';e.style.color='#ffbe0b';
+try{const r=await fetch(`https://api.github.com/gists/${g}`,{headers:{'Authorization':`token ${p}`}});
+if(r.status===401)throw new Error('Invalid PAT.');if(r.status===404)throw new Error('Gist not found.');
+if(!r.ok)throw new Error(`Error ${r.status}`);const d=await r.json();if(!d.files['wiki-data.json'])throw new Error('Gist needs wiki-data.json file.');
+localStorage.setItem('0xb-pat',p);localStorage.setItem('0xb-gid',g);S.pat=p;S.gid=g;S.setup=true;loadData();}
+catch(err){e.textContent=err.message;e.style.display='block';e.style.color='#ff3e3e';}}
+function manualSync(){if(S.pending)gPush();else loadData();}
+function logout(){if(!confirm('Disconnect from GitHub?'))return;localStorage.removeItem('0xb-pat');localStorage.removeItem('0xb-gid');
+S.pat='';S.gid='';S.setup=false;render();}
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+if(S.setup)loadData();else render();
+</script>
+</body>
+</html>
